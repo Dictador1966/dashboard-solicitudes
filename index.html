@@ -831,7 +831,7 @@
                 <thead>
                     <tr>
                         <th>Folio</th>
-                        <th>Título</th>
+                        <th>Tipo de Movimiento</th>
                         <th>Categoría</th>
                         <th>Aseguradora</th>
                         <th>Asegurado</th>
@@ -955,16 +955,14 @@
     }
 
     // ============================================================
-    // FUNCIÓN PARA FILTRAR POR DOBLE CLIC (CORREGIDA)
+    // FUNCIÓN PARA FILTRAR POR DOBLE CLIC
     // ============================================================
     function filtrarPorDobleClic(campo, valor) {
-        // Validar que el valor sea válido (no vacío, no guión, no undefined)
         if (!valor || valor === '-' || valor === '' || valor === 'null' || valor === 'undefined') {
             mostrarToast('⚠️ Valor no válido para filtrar', 'error');
             return;
         }
 
-        // Si ya hay un filtro activo y es el mismo, lo quitamos
         if (filtroDobleClic && filtroDobleClic.campo === campo && filtroDobleClic.valor === valor) {
             filtroDobleClic = null;
             mostrarToast('Filtro removido', 'success');
@@ -975,7 +973,8 @@
                 'aseguradora': 'Aseguradora',
                 'asegurado': 'Asegurado',
                 'vendedor': 'Vendedor',
-                'etiqueta': 'Etiqueta'
+                'etiqueta': 'Etiqueta',
+                'tipo_movimiento': 'Tipo de Movimiento'
             }[campo] || campo;
             mostrarToast('🔍 Filtrado por ' + nombreCampo + ': "' + valor + '"', 'success');
         }
@@ -998,7 +997,8 @@
                 'aseguradora': 'Aseguradora',
                 'asegurado': 'Asegurado',
                 'vendedor': 'Vendedor',
-                'etiqueta': 'Etiqueta'
+                'etiqueta': 'Etiqueta',
+                'tipo_movimiento': 'Tipo de Movimiento'
             }[filtroDobleClic.campo] || filtroDobleClic.campo;
             container.innerHTML = '<span class="filter-badge">' +
                 '🔍 ' + nombreCampo + ': "' + filtroDobleClic.valor + '"' +
@@ -1076,7 +1076,7 @@
     }
 
     // ============================================================
-    // CARGA CSV (CORREGIDA)
+    // CARGA CSV
     // ============================================================
     var uploadArea = document.getElementById('uploadArea');
     var fileInput = document.getElementById('fileInput');
@@ -1091,7 +1091,6 @@
     fileInput.addEventListener('change', function(e) { if (e.target.files.length) procesarArchivo(e.target.files[0]); });
 
     function procesarArchivo(file) {
-        // Aceptar tanto CSV como archivos con extensión .csv
         if (!file.name.toLowerCase().endsWith('.csv')) {
             mostrarToast('Selecciona un archivo CSV', 'error');
             return;
@@ -1129,11 +1128,9 @@
     }
 
     function parseCSV(text) {
-        // Dividir por líneas, ignorar líneas vacías
         var lines = text.split('\n').filter(function(l) { return l.trim() !== ''; });
         if (lines.length < 2) return [];
         
-        // Obtener encabezados
         var headers = lines[0].split(',').map(function(h) { return h.trim().replace(/^"|"$/g, ''); });
         var result = [];
         
@@ -1396,6 +1393,7 @@
                 if (campo === 'asegurado' && s.Asegurado !== valor) return false;
                 if (campo === 'vendedor' && s.Vendedor !== valor) return false;
                 if (campo === 'etiqueta' && !(s.etiquetas || []).includes(valor)) return false;
+                if (campo === 'tipo_movimiento' && s.Titulo !== valor) return false;
             }
 
             if (cia && s.Cia !== cia) return false;
@@ -1448,17 +1446,16 @@
             var diasColor = getDiasColor(dias);
             var diasLabel = dias === '-' ? '-' : dias + 'd';
             
-            // Escapar valores para HTML
             var categoria = (s.Categoria || '-').replace(/"/g, '&quot;').replace(/'/g, "&#39;");
             var aseguradora = (s.Cia || '-').replace(/"/g, '&quot;').replace(/'/g, "&#39;");
             var asegurado = (s.Asegurado || '-').replace(/"/g, '&quot;').replace(/'/g, "&#39;");
             var vendedor = (s.Vendedor || '-').replace(/"/g, '&quot;').replace(/'/g, "&#39;");
-            var titulo = (s.Titulo || '-').replace(/"/g, '&quot;').replace(/'/g, "&#39;");
+            var tipoMovimiento = (s.Titulo || '-').replace(/"/g, '&quot;').replace(/'/g, "&#39;");
             var folio = (s.FolioNo || '-').replace(/"/g, '&quot;').replace(/'/g, "&#39;");
             
             html += '<tr>' +
                 '<td><strong>' + folio + '</strong></td>' +
-                '<td>' + titulo + '</td>' +
+                '<td><span class="clickable-cell" ondblclick="filtrarPorDobleClic(\'tipo_movimiento\', \'' + tipoMovimiento.replace(/'/g, "\\'") + '\')" title="Doble clic para filtrar por este tipo de movimiento">' + tipoMovimiento + '<span class="tooltip">🔍 Filtrar</span></span></td>' +
                 '<td><span class="clickable-cell" ondblclick="filtrarPorDobleClic(\'categoria\', \'' + categoria.replace(/'/g, "\\'") + '\')" title="Doble clic para filtrar por esta categoría">' + categoria + '<span class="tooltip">🔍 Filtrar</span></span></td>' +
                 '<td><span class="clickable-cell" ondblclick="filtrarPorDobleClic(\'aseguradora\', \'' + aseguradora.replace(/'/g, "\\'") + '\')" title="Doble clic para filtrar por esta aseguradora">' + aseguradora + '<span class="tooltip">🔍 Filtrar</span></span></td>' +
                 '<td><span class="clickable-cell" ondblclick="filtrarPorDobleClic(\'asegurado\', \'' + asegurado.replace(/'/g, "\\'") + '\')" title="Doble clic para filtrar por este asegurado">' + asegurado + '<span class="tooltip">🔍 Filtrar</span></span></td>' +
@@ -1597,7 +1594,7 @@
     console.log('✅ Dashboard Profesional cargado');
     console.log('📊 ' + solicitudes.length + ' solicitudes');
     console.log('🟡 Filtros activos con fondo amarillo intenso y negritas');
-    console.log('🔄 Doble clic en Categoría, Aseguradora, Asegurado, Vendedor o Etiquetas para filtrar');
+    console.log('🔄 Doble clic en Tipo de Movimiento, Categoría, Aseguradora, Asegurado, Vendedor o Etiquetas para filtrar');
 </script>
 
 </body>
