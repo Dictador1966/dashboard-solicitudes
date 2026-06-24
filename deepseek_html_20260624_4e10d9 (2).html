@@ -1,0 +1,1604 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Profesional</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #f7f9fc;
+            color: #1a1a2e;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1480px;
+            margin: 0 auto;
+        }
+
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 18px;
+            border: none;
+            border-radius: 8px;
+            font-family: 'Inter', sans-serif;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+        }
+
+        .btn:active { transform: scale(0.97); }
+
+        .btn-primary {
+            background: #ffffff;
+            color: #1a1a2e;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+        }
+        .btn-primary:hover { background: #f1f5f9; }
+
+        .btn-success {
+            background: #10b981;
+            color: #fff;
+        }
+        .btn-success:hover { background: #059669; }
+
+        .btn-warning {
+            background: #f59e0b;
+            color: #fff;
+        }
+        .btn-warning:hover { background: #d97706; }
+
+        .btn-danger {
+            background: #ef4444;
+            color: #fff;
+        }
+        .btn-danger:hover { background: #dc2626; }
+
+        .btn-outline {
+            background: transparent;
+            color: #64748b;
+            border: 1.5px solid #e2e8f0;
+        }
+        .btn-outline:hover { background: #f1f5f9; border-color: #94a3b8; }
+
+        .btn-sm {
+            padding: 4px 10px;
+            font-size: 11px;
+            border-radius: 6px;
+        }
+
+        .btn-ghost {
+            background: transparent;
+            color: #64748b;
+            padding: 4px 8px;
+            border-radius: 6px;
+        }
+        .btn-ghost:hover { background: #f1f5f9; }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+            margin-bottom: 28px;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .header-left .logo {
+            width: 44px;
+            height: 44px;
+            background: #1a1a2e;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 20px;
+        }
+
+        .header-left h1 {
+            font-size: 22px;
+            font-weight: 600;
+            color: #1a1a2e;
+            letter-spacing: -0.3px;
+        }
+
+        .header-left .subtitle {
+            font-size: 14px;
+            color: #94a3b8;
+            font-weight: 400;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .upload-area {
+            border: 2px dashed #e2e8f0;
+            border-radius: 16px;
+            padding: 40px 20px;
+            text-align: center;
+            background: #fafbfc;
+            margin-bottom: 28px;
+            transition: all 0.3s ease;
+        }
+
+        .upload-area.dragover {
+            border-color: #1a1a2e;
+            background: #f1f5f9;
+        }
+
+        .upload-area .icon {
+            font-size: 36px;
+            color: #94a3b8;
+            margin-bottom: 10px;
+        }
+
+        .upload-area h3 {
+            font-weight: 500;
+            color: #1a1a2e;
+            font-size: 17px;
+        }
+
+        .upload-area p {
+            color: #94a3b8;
+            font-size: 14px;
+            margin: 4px 0 12px;
+        }
+
+        .upload-area input[type="file"] { display: none; }
+
+        .upload-area .btn-upload {
+            background: #1a1a2e;
+            color: #fff;
+            padding: 10px 28px;
+            border-radius: 10px;
+            cursor: pointer;
+            display: inline-block;
+            font-weight: 500;
+            font-size: 14px;
+            transition: background 0.2s;
+        }
+        .upload-area .btn-upload:hover { background: #2d2d44; }
+
+        .upload-area.hidden { display: none; }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 14px;
+            margin-bottom: 28px;
+        }
+
+        .stat-card {
+            background: #fff;
+            border-radius: 14px;
+            padding: 18px 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+            border: 1px solid #f1f5f9;
+            transition: all 0.2s;
+        }
+
+        .stat-card:hover { border-color: #e2e8f0; }
+
+        .stat-card .number {
+            font-size: 26px;
+            font-weight: 700;
+            color: #1a1a2e;
+            letter-spacing: -0.5px;
+        }
+
+        .stat-card .label {
+            font-size: 13px;
+            color: #94a3b8;
+            font-weight: 400;
+        }
+
+        .stat-card .dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 6px;
+        }
+
+        .charts {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 18px;
+            margin-bottom: 28px;
+        }
+
+        .chart-box {
+            background: #fff;
+            border-radius: 14px;
+            padding: 18px 18px 14px;
+            border: 1px solid #f1f5f9;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+        }
+
+        .chart-box h4 {
+            font-size: 13px;
+            font-weight: 500;
+            color: #64748b;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .chart-box canvas { max-height: 160px; width: 100% !important; }
+
+        .filters {
+            background: #fff;
+            border-radius: 14px;
+            padding: 14px 18px;
+            border: 1px solid #f1f5f9;
+            margin-bottom: 22px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .filters select,
+        .filters input {
+            padding: 6px 12px;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 13px;
+            font-family: 'Inter', sans-serif;
+            background: #fafbfc;
+            color: #1a1a2e;
+            min-width: 120px;
+            flex: 1 1 auto;
+            transition: all 0.2s ease;
+        }
+
+        .filters select:focus,
+        .filters input:focus {
+            outline: none;
+            border-color: #1a1a2e;
+        }
+
+        .filters select.active-filter,
+        .filters input.active-filter {
+            background: #fbbf24 !important;
+            font-weight: 700 !important;
+            border-color: #f59e0b !important;
+            box-shadow: 0 0 0 2px #fbbf24, 0 0 0 4px rgba(251, 191, 36, 0.15);
+        }
+
+        .filters .filter-group label {
+            font-size: 12px;
+            font-weight: 500;
+            color: #64748b;
+            white-space: nowrap;
+        }
+
+        .filters .filter-group input[type="date"] {
+            min-width: 110px;
+            padding: 6px 10px;
+        }
+
+        .table-section {
+            background: #fff;
+            border-radius: 14px;
+            border: 1px solid #f1f5f9;
+            padding: 18px 0 0;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+            overflow: hidden;
+        }
+
+        .table-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px 14px;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .table-header h3 {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1a1a2e;
+        }
+
+        .table-header .count {
+            font-size: 13px;
+            color: #94a3b8;
+            background: #f1f5f9;
+            padding: 2px 12px;
+            border-radius: 20px;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+            max-height: 440px;
+            overflow-y: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        table thead {
+            background: #fafbfc;
+            position: sticky;
+            top: 0;
+            z-index: 5;
+        }
+
+        table th {
+            text-align: left;
+            padding: 10px 14px;
+            font-weight: 500;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            color: #94a3b8;
+            border-bottom: 1px solid #f1f5f9;
+            white-space: nowrap;
+        }
+
+        table td {
+            padding: 10px 14px;
+            border-bottom: 1px solid #f8fafc;
+            color: #1a1a2e;
+            vertical-align: middle;
+        }
+
+        table tbody tr:hover { background: #fafbfc; }
+        table tbody tr:last-child td { border-bottom: none; }
+
+        .clickable-cell {
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border-radius: 4px;
+            padding: 2px 4px;
+            position: relative;
+            display: inline-block;
+        }
+
+        .clickable-cell:hover {
+            background: #e2e8f0;
+            transform: scale(1.02);
+        }
+
+        .clickable-cell:active {
+            transform: scale(0.95);
+        }
+
+        .clickable-cell .tooltip {
+            visibility: hidden;
+            opacity: 0;
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1a1a2e;
+            color: #fff;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 10px;
+            white-space: nowrap;
+            transition: all 0.2s ease;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        .clickable-cell:hover .tooltip {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        .clickable-cell::after {
+            content: '↗';
+            font-size: 9px;
+            opacity: 0;
+            margin-left: 4px;
+            transition: opacity 0.2s ease;
+            color: #94a3b8;
+        }
+
+        .clickable-cell:hover::after {
+            opacity: 1;
+        }
+
+        .sortable-header {
+            cursor: pointer;
+            user-select: none;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            transition: color 0.2s;
+        }
+
+        .sortable-header:hover {
+            color: #1a1a2e;
+        }
+
+        .sortable-header .sort-icon {
+            font-size: 10px;
+            opacity: 0.4;
+            transition: opacity 0.2s;
+        }
+
+        .sortable-header .sort-icon.active {
+            opacity: 1;
+            color: #1a1a2e;
+        }
+
+        .sortable-header .sort-icon.asc {
+            opacity: 1;
+            color: #1a1a2e;
+        }
+
+        .sortable-header .sort-icon.desc {
+            opacity: 1;
+            color: #1a1a2e;
+            transform: rotate(180deg);
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 2px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 500;
+        }
+
+        .badge-en-curso { background: #dbeafe; color: #1e40af; }
+        .badge-completada { background: #d1fae5; color: #065f46; }
+
+        .badge-dias {
+            display: inline-block;
+            padding: 2px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            min-width: 45px;
+            text-align: center;
+        }
+
+        .badge-dias.verde { background: #d1fae5; color: #065f46; }
+        .badge-dias.amarillo { background: #fef3c7; color: #92400e; }
+        .badge-dias.naranja { background: #ffedd5; color: #9a3412; }
+        .badge-dias.rojo { background: #fee2e2; color: #991b1b; }
+
+        .tag {
+            display: inline-block;
+            padding: 1px 8px;
+            border-radius: 12px;
+            font-size: 10px;
+            font-weight: 500;
+            background: #f1f5f9;
+            color: #475569;
+            margin: 1px 2px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .tag:hover {
+            background: #e2e8f0;
+            transform: scale(1.05);
+        }
+
+        .tag-urgente { background: #fee2e2; color: #991b1b; }
+        .tag-revision { background: #fef3c7; color: #92400e; }
+        .tag-aprobado { background: #d1fae5; color: #065f46; }
+        .tag-pendiente-cliente { background: #dbeafe; color: #1e40af; }
+
+        .comment-preview {
+            color: #94a3b8;
+            font-size: 12px;
+            cursor: pointer;
+            max-width: 140px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            transition: color 0.2s;
+        }
+        .comment-preview:hover { color: #1a1a2e; }
+
+        .actions {
+            display: flex;
+            gap: 4px;
+            flex-wrap: wrap;
+        }
+
+        .empty {
+            text-align: center;
+            padding: 50px 20px;
+            color: #94a3b8;
+        }
+
+        .empty i { font-size: 36px; opacity: 0.3; margin-bottom: 10px; display: block; }
+
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.3);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            animation: fadeIn 0.25s ease;
+        }
+
+        .modal-overlay.active { display: flex; }
+
+        .modal {
+            background: #fff;
+            border-radius: 16px;
+            padding: 28px 30px;
+            width: 92%;
+            max-width: 480px;
+            max-height: 90vh;
+            overflow-y: auto;
+            animation: slideUp 0.3s ease;
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+        }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+        .modal h2 {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1a1a2e;
+            margin-bottom: 16px;
+        }
+
+        .modal .form-group { margin-bottom: 14px; }
+        .modal .form-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            color: #475569;
+            margin-bottom: 4px;
+        }
+        .modal .form-group input,
+        .modal .form-group select,
+        .modal .form-group textarea {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 13px;
+            font-family: 'Inter', sans-serif;
+            transition: border-color 0.2s;
+        }
+        .modal .form-group input:focus,
+        .modal .form-group select:focus,
+        .modal .form-group textarea:focus {
+            outline: none;
+            border-color: #1a1a2e;
+        }
+        .modal .form-group textarea { resize: vertical; min-height: 60px; }
+
+        .modal .modal-actions {
+            display: flex;
+            gap: 8px;
+            justify-content: flex-end;
+            margin-top: 18px;
+        }
+
+        .comment-list {
+            max-height: 180px;
+            overflow-y: auto;
+            margin-bottom: 12px;
+        }
+
+        .comment-item {
+            background: #f8fafc;
+            padding: 8px 12px;
+            border-radius: 8px;
+            margin-bottom: 6px;
+            font-size: 13px;
+            border-left: 3px solid #1a1a2e;
+        }
+
+        .comment-item .date {
+            font-size: 10px;
+            color: #94a3b8;
+            display: block;
+            margin-top: 2px;
+        }
+
+        .tags-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 6px;
+        }
+
+        .tags-grid .tag-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background: #f1f5f9;
+            padding: 2px 10px 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .tags-grid .tag-item:hover { background: #e2e8f0; }
+        .tags-grid .tag-item .remove { color: #ef4444; font-weight: 600; margin-left: 2px; }
+
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: #1a1a2e;
+            color: #fff;
+            padding: 12px 20px;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px -10px rgba(0,0,0,0.2);
+            transform: translateY(80px);
+            opacity: 0;
+            transition: all 0.4s ease;
+            z-index: 2000;
+            font-size: 13px;
+            font-weight: 400;
+        }
+
+        .toast.show { transform: translateY(0); opacity: 1; }
+        .toast.success { background: #10b981; }
+        .toast.error { background: #ef4444; }
+
+        .col-dias {
+            text-align: center;
+            font-weight: 600;
+            min-width: 70px;
+        }
+
+        .col-fecha {
+            min-width: 100px;
+        }
+
+        .filter-badge {
+            display: inline-block;
+            background: #fbbf24;
+            color: #1a1a2e;
+            padding: 2px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+
+        .filter-badge .remove-filter {
+            cursor: pointer;
+            margin-left: 6px;
+            font-weight: 700;
+            color: #991b1b;
+        }
+
+        .filter-badge .remove-filter:hover { color: #7f1d1d; }
+
+        @media (max-width: 1024px) { .charts { grid-template-columns: 1fr 1fr; } }
+        @media (max-width: 768px) {
+            body { padding: 12px; }
+            .header { flex-direction: column; align-items: stretch; text-align: center; }
+            .header-left { justify-content: center; }
+            .header-actions { justify-content: center; }
+            .charts { grid-template-columns: 1fr; }
+            .filters { flex-direction: column; align-items: stretch; }
+            .filters .filter-group { flex-wrap: wrap; }
+            .filters .filter-group input[type="date"] { min-width: 100%; }
+            .stats { grid-template-columns: repeat(3, 1fr); }
+            .modal { padding: 20px; }
+        }
+
+        @media (max-width: 480px) {
+            .stats { grid-template-columns: 1fr 1fr; }
+            table { font-size: 10px; }
+            table th, table td { padding: 4px 6px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <!-- HEADER -->
+    <header class="header">
+        <div class="header-left">
+            <div class="logo"><i class="fas fa-file-alt"></i></div>
+            <div>
+                <h1>Solicitudes</h1>
+                <span class="subtitle">Gestión y seguimiento</span>
+            </div>
+        </div>
+        <div class="header-actions">
+            <button class="btn btn-outline btn-sm" onclick="exportarDatos()"><i class="fas fa-download"></i> JSON</button>
+            <button class="btn btn-outline btn-sm" onclick="exportarCSV()"><i class="fas fa-file-csv"></i> CSV</button>
+            <button class="btn btn-outline btn-sm" onclick="limpiarDatos()"><i class="fas fa-trash-alt"></i></button>
+        </div>
+    </header>
+
+    <!-- UPLOAD -->
+    <div class="upload-area" id="uploadArea">
+        <div class="icon"><i class="fas fa-cloud-upload-alt"></i></div>
+        <h3>Carga tu archivo CSV</h3>
+        <p>Arrastra o selecciona <strong>Solicitudes_42590811.csv</strong></p>
+        <label class="btn-upload" for="fileInput"><i class="fas fa-folder-open"></i> Seleccionar archivo</label>
+        <input type="file" id="fileInput" accept=".csv">
+    </div>
+
+    <!-- STATS -->
+    <div class="stats" id="statsGrid">
+        <div class="stat-card">
+            <div class="number" id="totalItems">0</div>
+            <div class="label">Total</div>
+        </div>
+        <div class="stat-card">
+            <div class="number" id="totalEnCurso">0</div>
+            <div class="label"><span class="dot" style="background:#3b82f6;"></span>En Curso</div>
+        </div>
+        <div class="stat-card">
+            <div class="number" id="totalCompletadas">0</div>
+            <div class="label"><span class="dot" style="background:#10b981;"></span>Completadas</div>
+        </div>
+        <div class="stat-card">
+            <div class="number" id="totalEtiquetas">0</div>
+            <div class="label"><i class="far fa-tags" style="color:#94a3b8;margin-right:4px;"></i>Etiquetas</div>
+        </div>
+        <div class="stat-card">
+            <div class="number" id="totalComentarios">0</div>
+            <div class="label"><i class="far fa-comment" style="color:#94a3b8;margin-right:4px;"></i>Comentarios</div>
+        </div>
+    </div>
+
+    <!-- CHARTS -->
+    <div class="charts">
+        <div class="chart-box">
+            <h4><i class="fas fa-building" style="color:#64748b;"></i> Por Aseguradora</h4>
+            <canvas id="chartAseguradoras"></canvas>
+        </div>
+        <div class="chart-box">
+            <h4><i class="fas fa-tag" style="color:#64748b;"></i> Por Categoría</h4>
+            <canvas id="chartTipos"></canvas>
+        </div>
+        <div class="chart-box">
+            <h4><i class="fas fa-chart-line" style="color:#64748b;"></i> Últimos 30 días</h4>
+            <canvas id="chartEvolucion"></canvas>
+        </div>
+    </div>
+
+    <!-- FILTERS -->
+    <div class="filters">
+        <select id="filterAseguradora" onchange="aplicarFiltros()"><option value="">Todas</option></select>
+        <select id="filterCategoria" onchange="aplicarFiltros()"><option value="">Todas</option></select>
+        <div class="filter-group">
+            <label>Desde</label>
+            <input type="date" id="filterFechaInicio" onchange="aplicarFiltros()">
+        </div>
+        <div class="filter-group">
+            <label>Hasta</label>
+            <input type="date" id="filterFechaFin" onchange="aplicarFiltros()">
+        </div>
+        <input type="text" id="searchInput" placeholder="Buscar..." onkeyup="if(event.key==='Enter') aplicarFiltros()">
+        <button class="btn btn-ghost btn-sm" onclick="aplicarFiltros()"><i class="fas fa-search"></i></button>
+        <button class="btn btn-ghost btn-sm" onclick="limpiarFiltros()"><i class="fas fa-times"></i></button>
+        <button class="btn btn-outline btn-sm" onclick="abrirModalEtiquetas()"><i class="fas fa-tags"></i></button>
+        <span id="filtroDobleClicBadge"></span>
+    </div>
+
+    <!-- TABLE -->
+    <div class="table-section">
+        <div class="table-header">
+            <h3><i class="far fa-list-alt" style="color:#94a3b8;margin-right:8px;"></i>Solicitudes</h3>
+            <span class="count" id="resultCount">0 registros</span>
+        </div>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Folio</th>
+                        <th>Título</th>
+                        <th>Categoría</th>
+                        <th>Aseguradora</th>
+                        <th>Asegurado</th>
+                        <th>Vendedor</th>
+                        <th>Etiquetas</th>
+                        <th>Comentario</th>
+                        <th class="col-fecha">
+                            <span class="sortable-header" onclick="ordenarPor('fecha')">
+                                Fecha
+                                <span class="sort-icon" id="sort-fecha">⇅</span>
+                            </span>
+                        </th>
+                        <th class="col-dias">
+                            <span class="sortable-header" onclick="ordenarPor('dias')">
+                                Días
+                                <span class="sort-icon" id="sort-dias">⇅</span>
+                            </span>
+                        </th>
+                        <th style="text-align:right;">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="tablaBody">
+                    <tr><td colspan="11"><div class="empty"><i class="fas fa-upload"></i>Carga un archivo CSV para comenzar</div></td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL COMENTARIOS -->
+<div class="modal-overlay" id="modalComentarios">
+    <div class="modal">
+        <h2><i class="far fa-comment-dots" style="margin-right:8px;"></i>Comentarios</h2>
+        <div id="modalComentarioTitulo" style="font-size:14px;color:#64748b;margin-bottom:12px;"></div>
+        <div class="comment-list" id="commentList"></div>
+        <div class="form-group">
+            <label>Nuevo comentario</label>
+            <textarea id="nuevoComentario" rows="2" placeholder="Escribe un comentario..."></textarea>
+        </div>
+        <div class="modal-actions">
+            <button class="btn btn-outline" onclick="cerrarModalComentarios()">Cerrar</button>
+            <button class="btn btn-success" onclick="agregarComentario()"><i class="fas fa-plus"></i> Agregar</button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL ETIQUETAS -->
+<div class="modal-overlay" id="modalEtiquetas">
+    <div class="modal">
+        <h2><i class="fas fa-tags" style="margin-right:8px;"></i>Etiquetas</h2>
+        <div class="form-group">
+            <label>Etiquetas disponibles</label>
+            <div class="tags-grid" id="etiquetasDisponibles"></div>
+        </div>
+        <div class="form-group">
+            <label>Nueva etiqueta</label>
+            <div style="display:flex;gap:8px;">
+                <input type="text" id="nuevaEtiqueta" placeholder="Ej: urgente, revisión...">
+                <button class="btn btn-success btn-sm" onclick="agregarEtiquetaGlobal()"><i class="fas fa-plus"></i></button>
+            </div>
+        </div>
+        <div class="modal-actions">
+            <button class="btn btn-outline" onclick="cerrarModalEtiquetas()">Cerrar</button>
+        </div>
+    </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+    // ============================================================
+    // CONFIGURACIÓN
+    // ============================================================
+    const STORAGE_KEY = 'solicitudes_pro';
+    let solicitudes = [];
+    let datosFiltrados = [];
+    let etiquetasGlobales = ['urgente', 'revision', 'aprobado', 'pendiente-cliente'];
+    let comentarioTarget = null;
+    let chartAseguradoras = null, chartTipos = null, chartEvolucion = null;
+    let ordenCampo = 'fecha';
+    let ordenDireccion = 'desc';
+    let filtroDobleClic = null;
+
+    // ============================================================
+    // FUNCIÓN PARA CALCULAR DÍAS TRANSCURRIDOS
+    // ============================================================
+    function calcularDiasTranscurridos(fechaStr) {
+        if (!fechaStr) return '-';
+        let fecha = null;
+        let cleanDate = fechaStr.replace(/\s+/g, ' ').trim();
+        fecha = new Date(cleanDate);
+        if (isNaN(fecha)) {
+            const partes = cleanDate.split('/');
+            if (partes.length === 3) {
+                fecha = new Date(partes[2], partes[1] - 1, partes[0]);
+            }
+        }
+        if (isNaN(fecha)) {
+            const partes = cleanDate.split('-');
+            if (partes.length === 3 && partes[0].length === 4) {
+                fecha = new Date(partes[0], partes[1] - 1, partes[2]);
+            }
+        }
+        if (isNaN(fecha)) return '-';
+        const hoy = new Date();
+        hoy.setHours(0, 0, 0, 0);
+        fecha.setHours(0, 0, 0, 0);
+        const diffTime = hoy.getTime() - fecha.getTime();
+        const diffDias = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+        if (diffDias < 0) return 0;
+        return diffDias;
+    }
+
+    function getDiasColor(dias) {
+        if (dias === '-') return '';
+        if (dias <= 3) return 'verde';
+        if (dias <= 7) return 'amarillo';
+        if (dias <= 15) return 'naranja';
+        return 'rojo';
+    }
+
+    // ============================================================
+    // FUNCIÓN PARA FILTRAR POR DOBLE CLIC (CORREGIDA)
+    // ============================================================
+    function filtrarPorDobleClic(campo, valor) {
+        // Validar que el valor sea válido (no vacío, no guión, no undefined)
+        if (!valor || valor === '-' || valor === '' || valor === 'null' || valor === 'undefined') {
+            mostrarToast('⚠️ Valor no válido para filtrar', 'error');
+            return;
+        }
+
+        // Si ya hay un filtro activo y es el mismo, lo quitamos
+        if (filtroDobleClic && filtroDobleClic.campo === campo && filtroDobleClic.valor === valor) {
+            filtroDobleClic = null;
+            mostrarToast('Filtro removido', 'success');
+        } else {
+            filtroDobleClic = { campo, valor };
+            const nombreCampo = {
+                'categoria': 'Categoría',
+                'aseguradora': 'Aseguradora',
+                'asegurado': 'Asegurado',
+                'vendedor': 'Vendedor',
+                'etiqueta': 'Etiqueta'
+            }[campo] || campo;
+            mostrarToast('🔍 Filtrado por ' + nombreCampo + ': "' + valor + '"', 'success');
+        }
+
+        aplicarFiltros();
+    }
+
+    function limpiarFiltroDobleClic() {
+        filtroDobleClic = null;
+        actualizarBadgeDobleClic();
+        aplicarFiltros();
+        mostrarToast('Filtro por doble clic removido', 'success');
+    }
+
+    function actualizarBadgeDobleClic() {
+        const container = document.getElementById('filtroDobleClicBadge');
+        if (filtroDobleClic) {
+            const nombreCampo = {
+                'categoria': 'Categoría',
+                'aseguradora': 'Aseguradora',
+                'asegurado': 'Asegurado',
+                'vendedor': 'Vendedor',
+                'etiqueta': 'Etiqueta'
+            }[filtroDobleClic.campo] || filtroDobleClic.campo;
+            container.innerHTML = '<span class="filter-badge">' +
+                '🔍 ' + nombreCampo + ': "' + filtroDobleClic.valor + '"' +
+                '<span class="remove-filter" onclick="limpiarFiltroDobleClic()">✕</span>' +
+            '</span>';
+        } else {
+            container.innerHTML = '';
+        }
+    }
+
+    // ============================================================
+    // FUNCIÓN PARA DESTACAR FILTROS ACTIVOS
+    // ============================================================
+    function actualizarDestacadoFiltros() {
+        const campos = [
+            'filterAseguradora',
+            'filterCategoria',
+            'filterFechaInicio',
+            'filterFechaFin',
+            'searchInput'
+        ];
+
+        campos.forEach(function(id) {
+            var el = document.getElementById(id);
+            if (!el) return;
+            var valor = el.value.trim();
+            if (valor && valor !== '' && valor !== 'Todas') {
+                el.classList.add('active-filter');
+            } else {
+                el.classList.remove('active-filter');
+            }
+        });
+
+        actualizarBadgeDobleClic();
+    }
+
+    // ============================================================
+    // ORDENAMIENTO
+    // ============================================================
+    function ordenarPor(campo) {
+        if (ordenCampo === campo) {
+            ordenDireccion = ordenDireccion === 'asc' ? 'desc' : 'asc';
+        } else {
+            ordenCampo = campo;
+            ordenDireccion = 'desc';
+        }
+        document.querySelectorAll('.sort-icon').forEach(function(el) { el.className = 'sort-icon'; });
+        var icon = document.getElementById('sort-' + campo);
+        if (icon) { icon.className = 'sort-icon active ' + ordenDireccion; }
+        aplicarOrdenamiento();
+    }
+
+    function aplicarOrdenamiento() {
+        if (!datosFiltrados.length) return;
+        datosFiltrados.sort(function(a, b) {
+            var valA, valB;
+            if (ordenCampo === 'fecha') {
+                valA = new Date(a.fechaDisplay || a.CFecha || '');
+                valB = new Date(b.fechaDisplay || b.CFecha || '');
+                if (isNaN(valA)) valA = new Date(0);
+                if (isNaN(valB)) valB = new Date(0);
+            } else if (ordenCampo === 'dias') {
+                valA = a.diasTranscurridos !== undefined ? a.diasTranscurridos : calcularDiasTranscurridos(a.fechaDisplay || a.CFecha || '');
+                valB = b.diasTranscurridos !== undefined ? b.diasTranscurridos : calcularDiasTranscurridos(b.fechaDisplay || b.CFecha || '');
+                if (valA === '-') valA = -1;
+                if (valB === '-') valB = -1;
+            }
+            if (ordenDireccion === 'asc') {
+                return valA > valB ? 1 : valA < valB ? -1 : 0;
+            } else {
+                return valA < valB ? 1 : valA > valB ? -1 : 0;
+            }
+        });
+        renderizarTabla();
+    }
+
+    // ============================================================
+    // CARGA CSV (CORREGIDA)
+    // ============================================================
+    var uploadArea = document.getElementById('uploadArea');
+    var fileInput = document.getElementById('fileInput');
+
+    uploadArea.addEventListener('dragover', function(e) { e.preventDefault(); uploadArea.classList.add('dragover'); });
+    uploadArea.addEventListener('dragleave', function() { uploadArea.classList.remove('dragover'); });
+    uploadArea.addEventListener('drop', function(e) {
+        e.preventDefault();
+        uploadArea.classList.remove('dragover');
+        if (e.dataTransfer.files.length) procesarArchivo(e.dataTransfer.files[0]);
+    });
+    fileInput.addEventListener('change', function(e) { if (e.target.files.length) procesarArchivo(e.target.files[0]); });
+
+    function procesarArchivo(file) {
+        // Aceptar tanto CSV como archivos con extensión .csv
+        if (!file.name.toLowerCase().endsWith('.csv')) {
+            mostrarToast('Selecciona un archivo CSV', 'error');
+            return;
+        }
+        
+        var reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                var texto = e.target.result;
+                var datos = parseCSV(texto);
+                if (datos && datos.length > 0) {
+                    datos.forEach(function(d) { 
+                        d.etiquetas = d.etiquetas || []; 
+                        d.comentarios = d.comentarios || []; 
+                        d.estadoManual = d.Estatus || 'En Curso';
+                        d.diasTranscurridos = calcularDiasTranscurridos(d.fechaDisplay || d.CFecha || '');
+                    });
+                    solicitudes = datos;
+                    guardarDatos();
+                    actualizarDashboard();
+                    mostrarToast(datos.length + ' solicitudes cargadas correctamente', 'success');
+                    uploadArea.classList.add('hidden');
+                } else {
+                    mostrarToast('No se encontraron datos en el archivo', 'error');
+                }
+            } catch (err) {
+                mostrarToast('Error al leer el archivo: ' + err.message, 'error');
+                console.error(err);
+            }
+        };
+        reader.onerror = function() {
+            mostrarToast('Error al leer el archivo', 'error');
+        };
+        reader.readAsText(file, 'UTF-8');
+    }
+
+    function parseCSV(text) {
+        // Dividir por líneas, ignorar líneas vacías
+        var lines = text.split('\n').filter(function(l) { return l.trim() !== ''; });
+        if (lines.length < 2) return [];
+        
+        // Obtener encabezados
+        var headers = lines[0].split(',').map(function(h) { return h.trim().replace(/^"|"$/g, ''); });
+        var result = [];
+        
+        for (var i = 1; i < lines.length; i++) {
+            var values = parseCSVLine(lines[i]);
+            if (values.length < headers.length) continue;
+            
+            var obj = {};
+            headers.forEach(function(h, idx) {
+                var val = (values[idx] || '').trim().replace(/^"|"$/g, '');
+                obj[h] = val;
+            });
+            
+            var fechaDisplay = obj.CFecha || obj.FSolicitud || '';
+            
+            result.push({
+                IdGerencia: obj.IdGerencia || '',
+                IdTarea: obj.IdTarea || '',
+                FolioNo: obj.FolioNo || '',
+                Categoria: obj.Categoria || '',
+                Titulo: obj.Titulo || '',
+                Estatus: obj.Estatus || 'En Curso',
+                Ramo: obj.Ramo || '',
+                Cia: obj.Cia || '',
+                Asegurado: obj.Asegurado || '',
+                Vendedor: obj.Vendedor || '',
+                Comentario: obj.Comentario || '',
+                CFecha: obj.CFecha || '',
+                CHora: obj.CHora || '',
+                ClaveBit: obj.ClaveBit || '',
+                fechaDisplay: fechaDisplay,
+                etiquetas: [],
+                comentarios: [],
+                estadoManual: obj.Estatus || 'En Curso',
+                diasTranscurridos: calcularDiasTranscurridos(fechaDisplay)
+            });
+        }
+        return result;
+    }
+
+    function parseCSVLine(line) {
+        var result = [];
+        var current = '';
+        var inside = false;
+        for (var i = 0; i < line.length; i++) {
+            var c = line[i];
+            if (c === '"') {
+                inside = !inside;
+            } else if (c === ',' && !inside) {
+                result.push(current);
+                current = '';
+            } else {
+                current += c;
+            }
+        }
+        result.push(current);
+        return result;
+    }
+
+    // ============================================================
+    // LOCAL STORAGE
+    // ============================================================
+    function guardarDatos() { 
+        try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify({ solicitudes: solicitudes, etiquetasGlobales: etiquetasGlobales }));
+        } catch(e) {
+            console.warn('Error al guardar en Local Storage:', e);
+        }
+    }
+
+    function cargarDatos() {
+        try {
+            var stored = localStorage.getItem(STORAGE_KEY);
+            if (stored) {
+                var data = JSON.parse(stored);
+                solicitudes = data.solicitudes || [];
+                etiquetasGlobales = data.etiquetasGlobales || ['urgente', 'revision', 'aprobado', 'pendiente-cliente'];
+                solicitudes.forEach(function(s) {
+                    s.diasTranscurridos = calcularDiasTranscurridos(s.fechaDisplay || s.CFecha || '');
+                });
+                if (solicitudes.length) uploadArea.classList.add('hidden');
+                return true;
+            }
+        } catch(e) {
+            console.warn('Error al cargar datos:', e);
+        }
+        return false;
+    }
+
+    function cambiarEstatus(id, nuevo) {
+        var item = solicitudes.find(function(s) { return s.IdTarea === id; });
+        if (item) { 
+            item.Estatus = nuevo; 
+            item.estadoManual = nuevo; 
+            guardarDatos(); 
+            actualizarDashboard(); 
+            mostrarToast('✅ ' + nuevo, 'success'); 
+        }
+    }
+
+    function eliminarSolicitud(id) {
+        if (!confirm('¿Eliminar esta solicitud?')) return;
+        solicitudes = solicitudes.filter(function(s) { return s.IdTarea !== id; });
+        guardarDatos();
+        actualizarDashboard();
+        mostrarToast('Eliminada', 'success');
+    }
+
+    // ============================================================
+    // COMENTARIOS
+    // ============================================================
+    function abrirComentarios(id) {
+        comentarioTarget = id;
+        var item = solicitudes.find(function(s) { return s.IdTarea === id; });
+        if (!item) return;
+        document.getElementById('modalComentarioTitulo').textContent = (item.FolioNo || 'Sin folio') + ' — ' + (item.Titulo || 'Sin título');
+        renderizarComentarios(item);
+        document.getElementById('nuevoComentario').value = '';
+        document.getElementById('modalComentarios').classList.add('active');
+    }
+
+    function cerrarModalComentarios() { document.getElementById('modalComentarios').classList.remove('active'); }
+
+    function renderizarComentarios(item) {
+        var container = document.getElementById('commentList');
+        if (!item.comentarios || !item.comentarios.length) {
+            container.innerHTML = '<p style="color:#94a3b8;font-size:13px;text-align:center;">Sin comentarios</p>';
+            return;
+        }
+        container.innerHTML = item.comentarios.map(function(c) {
+            return '<div class="comment-item">' + c.texto + '<span class="date">' + (c.fecha || '') + '</span></div>';
+        }).join('');
+    }
+
+    function agregarComentario() {
+        var texto = document.getElementById('nuevoComentario').value.trim();
+        if (!texto) { mostrarToast('Escribe un comentario', 'error'); return; }
+        var item = solicitudes.find(function(s) { return s.IdTarea === comentarioTarget; });
+        if (!item) return;
+        if (!item.comentarios) item.comentarios = [];
+        item.comentarios.push({ texto: texto, fecha: new Date().toLocaleString() });
+        guardarDatos();
+        renderizarComentarios(item);
+        document.getElementById('nuevoComentario').value = '';
+        actualizarDashboard();
+        mostrarToast('Comentario agregado', 'success');
+    }
+
+    document.getElementById('modalComentarios').addEventListener('click', function(e) { if (e.target === e.currentTarget) cerrarModalComentarios(); });
+
+    // ============================================================
+    // ETIQUETAS
+    // ============================================================
+    function toggleEtiqueta(id, etiqueta) {
+        var item = solicitudes.find(function(s) { return s.IdTarea === id; });
+        if (!item) return;
+        if (!item.etiquetas) item.etiquetas = [];
+        var idx = item.etiquetas.indexOf(etiqueta);
+        idx > -1 ? item.etiquetas.splice(idx, 1) : item.etiquetas.push(etiqueta);
+        guardarDatos();
+        actualizarDashboard();
+    }
+
+    function abrirModalEtiquetas() {
+        renderizarEtiquetasDisponibles();
+        document.getElementById('modalEtiquetas').classList.add('active');
+    }
+
+    function cerrarModalEtiquetas() { document.getElementById('modalEtiquetas').classList.remove('active'); }
+
+    function renderizarEtiquetasDisponibles() {
+        var container = document.getElementById('etiquetasDisponibles');
+        container.innerHTML = etiquetasGlobales.map(function(e) {
+            return '<span class="tag-item" onclick="eliminarEtiquetaGlobal(\'' + e + '\')">' + e + ' <span class="remove">×</span></span>';
+        }).join('');
+    }
+
+    function agregarEtiquetaGlobal() {
+        var input = document.getElementById('nuevaEtiqueta');
+        var etiqueta = input.value.trim().toLowerCase().replace(/\s+/g, '-');
+        if (!etiqueta) { mostrarToast('Escribe una etiqueta', 'error'); return; }
+        if (etiquetasGlobales.indexOf(etiqueta) > -1) { mostrarToast('Ya existe', 'error'); return; }
+        etiquetasGlobales.push(etiqueta);
+        guardarDatos();
+        renderizarEtiquetasDisponibles();
+        input.value = '';
+        actualizarDashboard();
+        mostrarToast('Etiqueta agregada', 'success');
+    }
+
+    function eliminarEtiquetaGlobal(etiqueta) {
+        if (!confirm('¿Eliminar "' + etiqueta + '" de todas las solicitudes?')) return;
+        etiquetasGlobales = etiquetasGlobales.filter(function(e) { return e !== etiqueta; });
+        solicitudes.forEach(function(s) { if (s.etiquetas) s.etiquetas = s.etiquetas.filter(function(e) { return e !== etiqueta; }); });
+        guardarDatos();
+        renderizarEtiquetasDisponibles();
+        actualizarDashboard();
+        mostrarToast('Etiqueta eliminada', 'success');
+    }
+
+    document.getElementById('modalEtiquetas').addEventListener('click', function(e) { if (e.target === e.currentTarget) cerrarModalEtiquetas(); });
+    document.addEventListener('keydown', function(e) { if (e.key === 'Escape') { cerrarModalComentarios(); cerrarModalEtiquetas(); } });
+
+    // ============================================================
+    // FILTROS Y RENDER
+    // ============================================================
+    function actualizarDashboard() {
+        aplicarFiltros();
+        actualizarEstadisticas();
+        actualizarGraficos();
+        actualizarFiltros();
+        actualizarDestacadoFiltros();
+    }
+
+    function actualizarEstadisticas() {
+        var total = solicitudes.length;
+        var enCurso = solicitudes.filter(function(s) { return s.Estatus === 'En Curso' || s.estadoManual === 'En Curso'; }).length;
+        var completadas = solicitudes.filter(function(s) { return s.Estatus === 'Completada' || s.estadoManual === 'Completada'; }).length;
+        var etiquetasUsadas = new Set();
+        var totalComentarios = 0;
+        solicitudes.forEach(function(s) {
+            if (s.etiquetas) s.etiquetas.forEach(function(e) { etiquetasUsadas.add(e); });
+            if (s.comentarios) totalComentarios += s.comentarios.length;
+        });
+        document.getElementById('totalItems').textContent = total;
+        document.getElementById('totalEnCurso').textContent = enCurso;
+        document.getElementById('totalCompletadas').textContent = completadas;
+        document.getElementById('totalEtiquetas').textContent = etiquetasUsadas.size;
+        document.getElementById('totalComentarios').textContent = totalComentarios;
+    }
+
+    function actualizarFiltros() {
+        var selectCia = document.getElementById('filterAseguradora');
+        var cias = new Set(solicitudes.map(function(s) { return s.Cia; }).filter(function(c) { return c && c.trim(); }));
+        var current = selectCia.value;
+        selectCia.innerHTML = '<option value="">Todas</option>' + Array.from(cias).sort().map(function(c) { return '<option value="' + c + '">' + c + '</option>'; }).join('');
+        selectCia.value = current;
+
+        var selectCat = document.getElementById('filterCategoria');
+        var cats = new Set(solicitudes.map(function(s) { return s.Categoria; }).filter(function(c) { return c && c.trim(); }));
+        var currentCat = selectCat.value;
+        selectCat.innerHTML = '<option value="">Todas</option>' + Array.from(cats).sort().map(function(c) { return '<option value="' + c + '">' + c + '</option>'; }).join('');
+        selectCat.value = currentCat;
+    }
+
+    function aplicarFiltros() {
+        var cia = document.getElementById('filterAseguradora').value;
+        var categoria = document.getElementById('filterCategoria').value;
+        var search = document.getElementById('searchInput').value.toLowerCase().trim();
+        var fechaInicio = document.getElementById('filterFechaInicio').value;
+        var fechaFin = document.getElementById('filterFechaFin').value;
+
+        datosFiltrados = solicitudes.filter(function(s) {
+            // Filtro por doble clic
+            if (filtroDobleClic) {
+                var campo = filtroDobleClic.campo;
+                var valor = filtroDobleClic.valor;
+                if (campo === 'categoria' && s.Categoria !== valor) return false;
+                if (campo === 'aseguradora' && s.Cia !== valor) return false;
+                if (campo === 'asegurado' && s.Asegurado !== valor) return false;
+                if (campo === 'vendedor' && s.Vendedor !== valor) return false;
+                if (campo === 'etiqueta' && !(s.etiquetas || []).includes(valor)) return false;
+            }
+
+            if (cia && s.Cia !== cia) return false;
+            if (categoria && s.Categoria !== categoria) return false;
+            if (search) {
+                var texto = (s.Titulo + ' ' + s.Asegurado + ' ' + s.FolioNo + ' ' + s.Vendedor + ' ' + (s.etiquetas || []).join(' ')).toLowerCase();
+                if (texto.indexOf(search) === -1) return false;
+            }
+            if (fechaInicio || fechaFin) {
+                var fechaStr = s.fechaDisplay || s.CFecha || '';
+                if (fechaStr) {
+                    var fecha = new Date(fechaStr);
+                    if (!isNaN(fecha)) {
+                        if (fechaInicio && fecha < new Date(fechaInicio)) return false;
+                        if (fechaFin) { var fin = new Date(fechaFin); fin.setHours(23,59,59); if (fecha > fin) return false; }
+                    }
+                }
+            }
+            return true;
+        });
+
+        aplicarOrdenamiento();
+        document.getElementById('resultCount').textContent = datosFiltrados.length + ' registros';
+        actualizarDestacadoFiltros();
+    }
+
+    function limpiarFiltros() {
+        ['filterAseguradora','filterCategoria','searchInput','filterFechaInicio','filterFechaFin']
+            .forEach(function(id) { document.getElementById(id).value = ''; });
+        filtroDobleClic = null;
+        aplicarFiltros();
+        mostrarToast('Filtros limpiados', 'success');
+    }
+
+    function renderizarTabla() {
+        var tbody = document.getElementById('tablaBody');
+        if (!datosFiltrados.length) {
+            tbody.innerHTML = '<tr><td colspan="11"><div class="empty"><i class="fas fa-inbox"></i>No hay coincidencias</div></td></tr>';
+            return;
+        }
+        var html = '';
+        datosFiltrados.forEach(function(s) {
+            var tags = (s.etiquetas || []).map(function(e) {
+                var tagClass = etiquetasGlobales.indexOf(e) > -1 ? 'tag-' + e : '';
+                return '<span class="tag ' + tagClass + '" onclick="filtrarPorDobleClic(\'etiqueta\', \'' + e.replace(/'/g, "\\'") + '\')" title="Doble clic para filtrar por esta etiqueta">' + e + '</span>';
+            }).join('');
+            
+            var lastComment = s.comentarios && s.comentarios.length ? s.comentarios[s.comentarios.length-1].texto : (s.Comentario || '');
+            var dias = s.diasTranscurridos !== undefined ? s.diasTranscurridos : calcularDiasTranscurridos(s.fechaDisplay || s.CFecha || '');
+            var diasColor = getDiasColor(dias);
+            var diasLabel = dias === '-' ? '-' : dias + 'd';
+            
+            // Escapar valores para HTML
+            var categoria = (s.Categoria || '-').replace(/"/g, '&quot;').replace(/'/g, "&#39;");
+            var aseguradora = (s.Cia || '-').replace(/"/g, '&quot;').replace(/'/g, "&#39;");
+            var asegurado = (s.Asegurado || '-').replace(/"/g, '&quot;').replace(/'/g, "&#39;");
+            var vendedor = (s.Vendedor || '-').replace(/"/g, '&quot;').replace(/'/g, "&#39;");
+            var titulo = (s.Titulo || '-').replace(/"/g, '&quot;').replace(/'/g, "&#39;");
+            var folio = (s.FolioNo || '-').replace(/"/g, '&quot;').replace(/'/g, "&#39;");
+            
+            html += '<tr>' +
+                '<td><strong>' + folio + '</strong></td>' +
+                '<td>' + titulo + '</td>' +
+                '<td><span class="clickable-cell" ondblclick="filtrarPorDobleClic(\'categoria\', \'' + categoria.replace(/'/g, "\\'") + '\')" title="Doble clic para filtrar por esta categoría">' + categoria + '<span class="tooltip">🔍 Filtrar</span></span></td>' +
+                '<td><span class="clickable-cell" ondblclick="filtrarPorDobleClic(\'aseguradora\', \'' + aseguradora.replace(/'/g, "\\'") + '\')" title="Doble clic para filtrar por esta aseguradora">' + aseguradora + '<span class="tooltip">🔍 Filtrar</span></span></td>' +
+                '<td><span class="clickable-cell" ondblclick="filtrarPorDobleClic(\'asegurado\', \'' + asegurado.replace(/'/g, "\\'") + '\')" title="Doble clic para filtrar por este asegurado">' + asegurado + '<span class="tooltip">🔍 Filtrar</span></span></td>' +
+                '<td><span class="clickable-cell" ondblclick="filtrarPorDobleClic(\'vendedor\', \'' + vendedor.replace(/'/g, "\\'") + '\')" title="Doble clic para filtrar por este vendedor">' + vendedor + '<span class="tooltip">🔍 Filtrar</span></span></td>' +
+                '<td>' + (tags || '-') + '</td>' +
+                '<td><div class="comment-preview" onclick="abrirComentarios(\'' + s.IdTarea + '\')" title="Click para ver/agregar comentarios">' +
+                    (lastComment ? (lastComment.length > 35 ? lastComment.substring(0,35) + '…' : lastComment) : '💬 Agregar') +
+                '</div></td>' +
+                '<td class="col-fecha">' + (s.fechaDisplay || s.CFecha || '-') + '</td>' +
+                '<td class="col-dias"><span class="badge-dias ' + diasColor + '">' + diasLabel + '</span></td>' +
+                '<td style="text-align:right;"><div class="actions" style="justify-content:flex-end;">' +
+                    '<button class="btn btn-outline btn-sm" onclick="abrirComentarios(\'' + s.IdTarea + '\')"><i class="far fa-comment"></i></button>' +
+                    '<button class="btn btn-outline btn-sm" onclick="eliminarSolicitud(\'' + s.IdTarea + '\')"><i class="far fa-trash-alt"></i></button>' +
+                '</div></td></tr>';
+        });
+        tbody.innerHTML = html;
+    }
+
+    // ============================================================
+    // GRÁFICOS
+    // ============================================================
+    function actualizarGraficos() {
+        var cias = {};
+        solicitudes.forEach(function(s) { var c = s.Cia || 'Sin aseguradora'; cias[c] = (cias[c] || 0) + 1; });
+        var ciasData = Object.entries(cias).sort(function(a,b) { return b[1]-a[1]; }).slice(0,8);
+        if (chartAseguradoras) chartAseguradoras.destroy();
+        chartAseguradoras = new Chart(document.getElementById('chartAseguradoras'), {
+            type: 'doughnut',
+            data: { labels: ciasData.map(function(c) { return c[0]; }), datasets: [{ data: ciasData.map(function(c) { return c[1]; }), backgroundColor: ['#1a1a2e','#3b82f6','#10b981','#f59e0b','#ef4444','#8b5cf6','#ec4899','#14b8a6'] }] },
+            options: { responsive: true, plugins: { legend: { position: 'right', labels: { boxWidth: 10, font: { size: 10 } } } } }
+        });
+
+        var cats = {};
+        solicitudes.forEach(function(s) { var c = s.Categoria || 'Sin categoría'; cats[c] = (cats[c] || 0) + 1; });
+        var catsData = Object.entries(cats).sort(function(a,b) { return b[1]-a[1]; }).slice(0,8);
+        if (chartTipos) chartTipos.destroy();
+        chartTipos = new Chart(document.getElementById('chartTipos'), {
+            type: 'bar',
+            data: { labels: catsData.map(function(c) { return c[0]; }), datasets: [{ label: '', data: catsData.map(function(c) { return c[1]; }), backgroundColor: '#1a1a2e', borderRadius: 4 }] },
+            options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
+        });
+
+        var evol = {};
+        var hoy = new Date(), hace30 = new Date(hoy); hace30.setDate(hace30.getDate()-30);
+        solicitudes.forEach(function(s) {
+            var fechaStr = s.fechaDisplay || s.CFecha || '';
+            if (fechaStr) {
+                var fecha = new Date(fechaStr);
+                if (!isNaN(fecha) && fecha >= hace30 && fecha <= hoy) {
+                    var key = fecha.toISOString().slice(0,10);
+                    evol[key] = (evol[key] || 0) + 1;
+                }
+            }
+        });
+        var fechas = Object.keys(evol).sort();
+        if (chartEvolucion) chartEvolucion.destroy();
+        chartEvolucion = new Chart(document.getElementById('chartEvolucion'), {
+            type: 'line',
+            data: {
+                labels: fechas.map(function(f) { return f.slice(5); }),
+                datasets: [{ label: 'Solicitudes', data: fechas.map(function(f) { return evol[f]; }), borderColor: '#1a1a2e', backgroundColor: 'rgba(26,26,46,0.05)', fill: true, tension: 0.3 }]
+            },
+            options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
+        });
+    }
+
+    // ============================================================
+    // EXPORTAR
+    // ============================================================
+    function exportarDatos() {
+        if (!solicitudes.length) { mostrarToast('No hay datos', 'error'); return; }
+        var blob = new Blob([JSON.stringify({ solicitudes: solicitudes, etiquetasGlobales: etiquetasGlobales }, null, 2)], { type: 'application/json' });
+        var a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'solicitudes_' + new Date().toISOString().slice(0,10) + '.json';
+        a.click();
+        URL.revokeObjectURL(a.href);
+        mostrarToast('Exportado', 'success');
+    }
+
+    function exportarCSV() {
+        if (!solicitudes.length) { mostrarToast('No hay datos', 'error'); return; }
+        var headers = ['IdTarea','FolioNo','Categoria','Titulo','Estatus','Cia','Asegurado','Vendedor','CFecha','DiasTranscurridos','Etiquetas','Comentarios'];
+        var csv = headers.join(',') + '\n';
+        solicitudes.forEach(function(s) {
+            var dias = s.diasTranscurridos !== undefined ? s.diasTranscurridos : calcularDiasTranscurridos(s.fechaDisplay || s.CFecha || '');
+            var row = headers.map(function(h) {
+                if (h === 'Etiquetas') return (s.etiquetas || []).join('|');
+                if (h === 'Comentarios') return (s.comentarios || []).map(function(c) { return c.texto; }).join(' | ');
+                if (h === 'DiasTranscurridos') return dias;
+                var val = s[h] || '';
+                if (val.indexOf(',') > -1 || val.indexOf('"') > -1) val = '"' + val.replace(/"/g,'""') + '"';
+                return val;
+            });
+            csv += row.join(',') + '\n';
+        });
+        var blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        var a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'solicitudes_' + new Date().toISOString().slice(0,10) + '.csv';
+        a.click();
+        URL.revokeObjectURL(a.href);
+        mostrarToast('CSV exportado', 'success');
+    }
+
+    function limpiarDatos() {
+        if (!solicitudes.length) { mostrarToast('No hay datos', 'error'); return; }
+        if (!confirm('¿Eliminar todos los datos?')) return;
+        solicitudes = [];
+        guardarDatos();
+        actualizarDashboard();
+        uploadArea.classList.remove('hidden');
+        mostrarToast('Datos eliminados', 'success');
+    }
+
+    // ============================================================
+    // TOAST
+    // ============================================================
+    var toastTimeout = null;
+    function mostrarToast(msg, type) {
+        type = type || 'success';
+        var toast = document.getElementById('toast');
+        toast.textContent = msg;
+        toast.className = 'toast ' + type;
+        void toast.offsetWidth;
+        toast.classList.add('show');
+        clearTimeout(toastTimeout);
+        toastTimeout = setTimeout(function() { toast.classList.remove('show'); }, 2800);
+    }
+
+    // ============================================================
+    // INICIALIZACIÓN
+    // ============================================================
+    if (cargarDatos() && solicitudes.length) { uploadArea.classList.add('hidden'); actualizarDashboard(); }
+
+    console.log('✅ Dashboard Profesional cargado');
+    console.log('📊 ' + solicitudes.length + ' solicitudes');
+    console.log('🟡 Filtros activos con fondo amarillo intenso y negritas');
+    console.log('🔄 Doble clic en Categoría, Aseguradora, Asegurado, Vendedor o Etiquetas para filtrar');
+</script>
+
+</body>
+</html>
