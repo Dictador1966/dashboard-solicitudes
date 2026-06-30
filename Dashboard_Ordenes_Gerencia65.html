@@ -1,0 +1,1362 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Torre de Control · Órdenes de Trabajo · Gerencia 65</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#16213C;
+    --navy-2:#23335A;
+    --bg:#F1F3F8;
+    --card:#FFFFFF;
+    --border:#E2E6EE;
+    --text:#1B2030;
+    --muted:#6B7280;
+    --muted-2:#9AA1AE;
+    --crit:#8B1E1E;
+    --alta:#D14343;
+    --media:#E2873A;
+    --leve:#E0B23B;
+    --hoy:#3A6EA5;
+    --enplazo:#2E9E6E;
+    --gold:#C99A2E;
+    --silver:#8B95A6;
+    --bronze:#B0703B;
+    --font-display:'Sora',sans-serif;
+    --font-body:'Inter',sans-serif;
+    --font-mono:'IBM Plex Mono',monospace;
+    --radius:14px;
+    --shadow:0 1px 2px rgba(22,33,60,.04), 0 8px 24px -12px rgba(22,33,60,.12);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:var(--font-body);
+    -webkit-font-smoothing:antialiased;
+    padding:28px 32px 64px;
+  }
+  @media(max-width:720px){ body{padding:18px 14px 48px;} }
+
+  a{color:inherit;}
+
+  /* ===== HEADER ===== */
+  .topbar{
+    display:flex; justify-content:space-between; align-items:flex-start;
+    flex-wrap:wrap; gap:18px;
+    margin-bottom:18px;
+  }
+  .brand-eyebrow{
+    font-family:var(--font-mono); font-size:11.5px; letter-spacing:.14em;
+    color:var(--muted); text-transform:uppercase; margin:0 0 6px;
+    display:flex; align-items:center; gap:8px;
+  }
+  .brand-eyebrow .dot{width:6px;height:6px;border-radius:50%;background:var(--enplazo);box-shadow:0 0 0 3px rgba(46,158,110,.18);}
+  h1{
+    font-family:var(--font-display); font-weight:800; font-size:30px;
+    margin:0; color:var(--navy); letter-spacing:-.01em;
+  }
+  .subtitle{ color:var(--muted); font-size:14.5px; margin-top:6px; }
+  .topbar-meta{
+    text-align:right; font-family:var(--font-mono); font-size:12px; color:var(--muted-2);
+  }
+  .topbar-meta strong{display:block; color:var(--navy); font-size:13px; font-family:var(--font-body); font-weight:700;}
+  @media(max-width:720px){ .topbar-meta{text-align:left;} }
+
+  /* ===== TABS ===== */
+  .tabs{display:flex; gap:6px; margin-bottom:24px; border-bottom:1px solid var(--border); flex-wrap:wrap;}
+  .tab-btn{
+    font-family:var(--font-display); font-weight:700; font-size:14px; color:var(--muted);
+    background:none; border:none; padding:11px 6px 12px; cursor:pointer; position:relative;
+    display:flex; align-items:center; gap:8px; transition:color .12s ease;
+  }
+  .tab-btn:hover{color:var(--navy);}
+  .tab-btn::after{content:''; position:absolute; left:0; right:0; bottom:-1px; height:3px; background:transparent; border-radius:3px 3px 0 0; transition:background .12s ease;}
+  .tab-btn.active{color:var(--navy);}
+  .tab-btn.active::after{background:var(--navy);}
+  .tab-btn .tab-count{font-family:var(--font-mono); font-size:11px; background:#EEF0F5; color:var(--muted); padding:2px 7px; border-radius:10px; transition:background .12s ease, color .12s ease;}
+  .tab-btn.active .tab-count{background:var(--navy); color:#fff;}
+  .tab-btn + .tab-btn{margin-left:4px;}
+
+  /* ===== DATA ACTIONS (agregar / eliminar archivo) ===== */
+  .data-actions{display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end; margin:-6px 0 22px;}
+  @media(max-width:720px){ .data-actions{justify-content:flex-start;} }
+  .data-btn{
+    font-family:var(--font-body); font-size:12.5px; font-weight:600; padding:8px 14px;
+    border-radius:9px; cursor:pointer; border:1px solid var(--border); background:#fff;
+    transition:background .12s ease, border-color .12s ease, color .12s ease;
+  }
+  .data-btn.add{color:var(--hoy); border-color:#C7D9EC;}
+  .data-btn.add:hover{background:#E7EEF8;}
+  .data-btn.danger{color:#C81F35; border-color:#F0C7CC;}
+  .data-btn.danger:hover{background:#FDEEEF;}
+
+  .toast{
+    position:fixed; bottom:24px; right:24px; max-width:380px; background:var(--navy); color:#fff;
+    padding:13px 18px; border-radius:10px; font-size:13px; line-height:1.5; z-index:80;
+    box-shadow:0 16px 32px -12px rgba(0,0,0,.4); opacity:0; transform:translateY(10px);
+    transition:opacity .2s ease, transform .2s ease; pointer-events:none;
+  }
+  .toast.show{opacity:1; transform:translateY(0);}
+  .toast.toast-error{background:#8B1E1E;}
+  @media(max-width:720px){ .toast{left:14px; right:14px; bottom:14px; max-width:none;} }
+
+  /* ===== VERIFICADOR DE REGISTRO ===== */
+  .verify-circle{
+    width:22px; height:22px; border-radius:50%; border:2px solid var(--border); background:#fff;
+    display:flex; align-items:center; justify-content:center; cursor:pointer;
+    transition:background .12s ease, border-color .12s ease;
+  }
+  .verify-circle:hover{border-color:var(--hoy);}
+  .verify-circle svg{width:12px; height:12px; color:#fff; opacity:0; transition:opacity .12s ease;}
+  .verify-circle.checked{background:var(--enplazo); border-color:var(--enplazo);}
+  .verify-circle.checked svg{opacity:1;}
+  tr.verified-row{background:#F4FAF7;}
+  tr.verified-row:hover{background:#EBF6F0;}
+
+  /* ===== MODAL DE INFORME ===== */
+  .modal-overlay{
+    position:fixed; inset:0; background:rgba(22,33,60,.55); display:none;
+    align-items:center; justify-content:center; z-index:100; padding:20px;
+  }
+  .modal-overlay.show{display:flex;}
+  .modal-card{
+    background:#fff; border-radius:14px; max-width:540px; width:100%; max-height:85vh;
+    overflow-y:auto; box-shadow:0 24px 48px -16px rgba(0,0,0,.4); display:flex; flex-direction:column;
+  }
+  .modal-header{
+    padding:16px 22px; border-bottom:1px solid var(--border); display:flex;
+    justify-content:space-between; align-items:center; flex:0 0 auto;
+  }
+  .modal-header h3{margin:0; font-family:var(--font-display); font-size:15.5px; color:var(--navy);}
+  .modal-x{background:none; border:none; font-size:16px; color:var(--muted-2); cursor:pointer; padding:4px;}
+  .modal-x:hover{color:var(--navy);}
+  .modal-body{padding:6px 22px; overflow-y:auto; flex:1 1 auto;}
+  .report-row{display:grid; grid-template-columns:150px 1fr; gap:12px; padding:10px 0; border-bottom:1px solid #F0F2F6; font-size:13px;}
+  .report-row:last-child{border-bottom:none;}
+  .report-label{color:var(--muted); font-weight:700; font-size:11px; text-transform:uppercase; letter-spacing:.03em;}
+  .report-value{color:var(--text); line-height:1.5;}
+  .modal-footer{padding:14px 22px; border-top:1px solid var(--border); display:flex; justify-content:flex-end; gap:10px; flex:0 0 auto;}
+  .modal-btn{font-family:var(--font-body); font-size:13px; font-weight:600; padding:9px 16px; border-radius:9px; cursor:pointer; border:1px solid var(--border); background:#fff;}
+  .modal-btn.copy{color:var(--hoy); border-color:#C7D9EC;}
+  .modal-btn.copy:hover{background:#E7EEF8;}
+  .modal-btn.close:hover{background:#F0F2F6;}
+  .report-block{padding:14px 0; border-bottom:2px solid var(--border);}
+  .report-block:last-child{border-bottom:none; padding-bottom:4px;}
+  .report-block-head{display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:2px;}
+  .report-block-title{font-family:var(--font-display); font-size:13px; font-weight:700; color:var(--navy);}
+  .report-remove{font-family:var(--font-body); font-size:11px; font-weight:600; color:#C81F35; background:none; border:1px solid #F0C7CC; border-radius:7px; padding:4px 9px; cursor:pointer;}
+  .report-remove:hover{background:#FDEEEF;}
+
+
+  /* ===== KPI CARDS ===== */
+  .kpi-row{
+    display:grid; grid-template-columns:repeat(5,1fr); gap:14px; margin-bottom:28px;
+  }
+  @media(max-width:1100px){ .kpi-row{grid-template-columns:repeat(2,1fr);} }
+  @media(max-width:560px){ .kpi-row{grid-template-columns:1fr;} }
+  .kpi{
+    background:var(--card); border:1px solid var(--border); border-radius:var(--radius);
+    padding:16px 18px; box-shadow:var(--shadow); position:relative; overflow:hidden;
+  }
+  .kpi .bar{position:absolute; top:0; left:0; width:4px; height:100%;}
+  .kpi-label{font-size:11.5px; color:var(--muted); text-transform:uppercase; letter-spacing:.06em; font-weight:600;}
+  .kpi-value{font-family:var(--font-display); font-size:28px; font-weight:800; color:var(--navy); margin-top:6px; line-height:1;}
+  .kpi-sub{font-size:12.5px; color:var(--muted-2); margin-top:5px;}
+  .kpi.warn .bar{background:var(--alta);}
+  .kpi.crit .bar{background:var(--crit);}
+  .kpi.ok .bar{background:var(--enplazo);}
+  .kpi.info .bar{background:var(--hoy);}
+  .kpi.neutral .bar{background:var(--navy-2);}
+  .kpi-clickable{cursor:pointer; transition:transform .12s ease, box-shadow .12s ease;}
+  .kpi-clickable:hover{transform:translateY(-2px); box-shadow:0 4px 8px rgba(22,33,60,.06), 0 14px 28px -14px rgba(22,33,60,.22);}
+
+  /* ===== SECTION HEADERS ===== */
+  .section{margin-bottom:30px;}
+  .section-head{display:flex; align-items:baseline; justify-content:space-between; margin-bottom:12px; gap:10px; flex-wrap:wrap;}
+  .section-title{font-family:var(--font-display); font-weight:700; font-size:16.5px; color:var(--navy);}
+  .section-note{font-size:12px; color:var(--muted-2); font-family:var(--font-mono);}
+
+  /* ===== RADAR / CONTROL TOWER STRIP ===== */
+  .radar-card{
+    background:var(--navy); border-radius:var(--radius); padding:20px 22px 16px;
+    box-shadow:var(--shadow); color:#fff; position:relative;
+  }
+  .radar-head{display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:14px;}
+  .radar-head h3{font-family:var(--font-display); font-size:14px; margin:0; font-weight:700; color:#fff;}
+  .radar-head .legend{display:flex; gap:12px; flex-wrap:wrap; font-family:var(--font-mono); font-size:10.5px; color:rgba(255,255,255,.7);}
+  .legend span{display:inline-flex; align-items:center; gap:5px;}
+  .legend i{width:8px;height:8px;border-radius:2px;display:inline-block;}
+  .radar-strip{
+    display:flex; gap:3px; overflow-x:auto; padding-bottom:14px; align-items:flex-end;
+    scrollbar-width:thin;
+  }
+  .radar-strip::-webkit-scrollbar{height:6px;}
+  .radar-strip::-webkit-scrollbar-thumb{background:rgba(255,255,255,.2); border-radius:3px;}
+  .tile{
+    flex:0 0 auto; width:20px; height:54px; border-radius:4px;
+    display:flex; align-items:flex-end; justify-content:center; position:relative;
+    cursor:default; transition:transform .12s ease;
+    animation:flapIn .4s ease backwards;
+  }
+  .tile:hover{transform:translateY(-4px); z-index:2;}
+  .tile .tip{
+    position:absolute; bottom:64px; left:50%; transform:translateX(-50%) scale(.92);
+    background:#0E1626; color:#fff; padding:8px 10px; border-radius:8px; font-size:11px;
+    width:198px; opacity:0; pointer-events:none; transition:opacity .12s ease, transform .12s ease;
+    box-shadow:0 12px 24px -8px rgba(0,0,0,.5); z-index:5; line-height:1.45; font-family:var(--font-body);
+  }
+  .tile .tip b{font-family:var(--font-mono); display:block; color:#FFD37A; margin-bottom:2px;}
+  .tile:hover .tip{opacity:1; transform:translateX(-50%) scale(1);}
+  @keyframes flapIn{ from{opacity:0; transform:scaleY(.3) translateY(8px);} to{opacity:1; transform:scaleY(1) translateY(0);} }
+  @media(prefers-reduced-motion:reduce){ .tile{animation:none;} }
+  .radar-foot{display:flex; justify-content:space-between; font-family:var(--font-mono); font-size:10.5px; color:rgba(255,255,255,.55); margin-top:2px;}
+  .radar-empty{color:rgba(255,255,255,.55); font-size:12.5px; padding:18px 0;}
+
+  /* ===== GRID 2-COL ===== */
+  .grid-2{display:grid; grid-template-columns:1.3fr 1fr; gap:18px;}
+  @media(max-width:900px){ .grid-2{grid-template-columns:1fr;} }
+  .card{background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:18px 20px; box-shadow:var(--shadow);}
+  .card h3{font-family:var(--font-display); font-size:14px; margin:0 0 14px; color:var(--navy); font-weight:700;}
+  .empty-note{color:var(--muted-2); font-size:12.5px; padding:6px 0;}
+  .rank-list{max-height:360px; overflow-y:auto; padding-right:8px; scrollbar-width:thin;}
+  .rank-list::-webkit-scrollbar{width:6px;}
+  .rank-list::-webkit-scrollbar-track{background:transparent;}
+  .rank-list::-webkit-scrollbar-thumb{background:#D7DCE6; border-radius:3px;}
+  .rank-list::-webkit-scrollbar-thumb:hover{background:#BCC3D1;}
+
+  /* ranking bars */
+  .rank-row{display:grid; grid-template-columns:22px 1fr auto; align-items:center; gap:10px; padding:7px 0;}
+  .rank-row + .rank-row{border-top:1px solid #F0F2F6;}
+  .rank-pos{
+    width:22px; height:22px; border-radius:50%; font-family:var(--font-mono); font-size:11px; font-weight:600;
+    display:flex; align-items:center; justify-content:center; color:#fff; background:var(--muted-2);
+  }
+  .rank-row.top1 .rank-pos{background:var(--gold);}
+  .rank-row.top2 .rank-pos{background:var(--silver);}
+  .rank-row.top3 .rank-pos{background:var(--bronze);}
+  .rank-name{font-size:13.5px; font-weight:600; color:var(--text);}
+  .rank-name.vend-link{cursor:pointer;}
+  .rank-name.vend-link:hover{color:var(--hoy); text-decoration:underline dotted;}
+  .rank-bar-wrap{height:6px; background:#EEF0F5; border-radius:3px; margin-top:5px; overflow:hidden;}
+  .rank-bar-fill{height:100%; border-radius:3px; background:var(--navy-2);}
+  .rank-row.top1 .rank-bar-fill{background:var(--gold);}
+  .rank-row.top2 .rank-bar-fill{background:var(--silver);}
+  .rank-row.top3 .rank-bar-fill{background:var(--bronze);}
+  .rank-count{font-family:var(--font-mono); font-size:13px; font-weight:600; color:var(--navy); min-width:34px; text-align:right;}
+
+  .aseg-row{display:grid; grid-template-columns:1fr auto; align-items:center; gap:10px; padding:6px 0;}
+  .aseg-row + .aseg-row{border-top:1px solid #F0F2F6;}
+  .aseg-name{font-size:13px; font-weight:600;}
+  .aseg-name.aseg-link, .aseg-name.ramo-link{cursor:pointer;}
+  .aseg-name.aseg-link:hover, .aseg-name.ramo-link:hover{color:var(--hoy); text-decoration:underline dotted;}
+  .aseg-bar-wrap{height:5px;background:#EEF0F5;border-radius:3px;margin-top:5px;}
+  .aseg-bar-fill{height:100%;border-radius:3px;background:var(--hoy);}
+
+  /* segmented distribution bar */
+  .cat-tiles{display:grid; grid-template-columns:repeat(2,1fr); gap:12px;}
+  .cat-tile{
+    background:#F8F9FC; border:1px solid var(--border); border-radius:12px; padding:22px 14px;
+    text-align:center; cursor:pointer; transition:transform .12s ease, box-shadow .12s ease, border-color .12s ease;
+  }
+  .cat-tile:hover{transform:translateY(-2px); box-shadow:var(--shadow); border-color:var(--hoy); background:#fff;}
+  .cat-tile-icon{display:inline-flex;}
+  .cat-tile-icon svg{width:26px; height:26px; display:block;}
+  .cat-tile .tile-value{font-family:var(--font-display); font-size:28px; font-weight:800; color:var(--navy); margin-top:10px;}
+  .cat-tile .tile-label{font-size:12.5px; color:var(--muted); margin-top:3px;}
+
+  /* ===== FILTER BAR ===== */
+  .filter-bar{
+    display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-bottom:14px;
+  }
+  .filter-bar select, .filter-bar input{
+    font-family:var(--font-body); font-size:13px; padding:8px 12px; border-radius:9px;
+    border:1px solid var(--border); background:#fff; color:var(--text);
+  }
+  .filter-bar input[type="text"]{flex:1; min-width:160px;}
+  .filter-bar .clear-btn{
+    font-family:var(--font-body); font-size:12.5px; color:var(--hoy); background:none; border:none;
+    cursor:pointer; font-weight:600; padding:6px 10px; border-radius:8px;
+    transition:background .15s ease, color .15s ease, box-shadow .15s ease;
+  }
+  .filter-bar .clear-btn.active{
+    background:#E0263F; color:#FFFFFF; box-shadow:0 4px 10px -2px rgba(224,38,63,.45);
+  }
+  .filter-bar .clear-btn.active:hover{ background:#C81F35; }
+  .result-count{font-family:var(--font-mono); font-size:11.5px; color:var(--muted-2); margin-left:auto; white-space:nowrap;}
+
+  /* ===== TABLE ===== */
+  .table-card{background:var(--card); border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow); overflow:hidden;}
+  table{width:100%; border-collapse:collapse; font-size:13px;}
+  thead th{
+    background:#F8F9FC; color:var(--muted); font-size:11px; text-transform:uppercase; letter-spacing:.04em;
+    text-align:left; padding:11px 14px; border-bottom:1px solid var(--border); cursor:pointer; user-select:none;
+    white-space:nowrap; font-weight:700;
+  }
+  thead th:hover{color:var(--navy);}
+  thead th.sorted::after{content:' ▾'; color:var(--hoy);}
+  thead th.sorted.asc::after{content:' ▴';}
+  tbody td{padding:11px 14px; border-bottom:1px solid #F0F2F6; vertical-align:top;}
+  tbody tr:hover{background:#FAFBFD;}
+  tbody tr:last-child td{border-bottom:none;}
+  .doc-code{font-family:var(--font-mono); font-size:12px; color:var(--navy); font-weight:600;}
+  .cat-tag{
+    display:inline-block; font-size:10.5px; font-weight:700; padding:2px 7px; border-radius:5px;
+    margin-top:4px; letter-spacing:.02em;
+  }
+  .cat-tag.emision{background:#E7EEF8; color:var(--hoy);}
+  .cat-tag.renovacion{background:#EFE7F8; color:#7A4FB5;}
+  .cliente-name{font-weight:600; color:var(--text);}
+  .ramo-name{display:block; font-size:11.5px; color:var(--muted-2); margin-top:10px;}
+  .cell-link{
+    cursor:pointer; display:inline-block; border-left:3px solid var(--hoy);
+    padding-left:9px; transition:color .12s ease;
+  }
+  .cell-link:hover{color:var(--hoy);}
+  .ramo-name.cell-link{display:block; margin-top:12px;}
+  .status-pill{
+    display:inline-flex; align-items:center; gap:6px; font-family:var(--font-mono); font-size:11.5px;
+    font-weight:600; padding:4px 9px; border-radius:20px; white-space:nowrap;
+  }
+  .status-pill i{width:7px;height:7px;border-radius:50%; display:inline-block;}
+  .row-detail{background:#F8F9FC; font-size:12px; color:var(--muted); padding:10px 14px 14px 14px;}
+  .row-detail b{color:var(--navy);}
+  .expand-btn{background:none; border:1px solid var(--border); border-radius:6px; font-size:11px; color:var(--muted); cursor:pointer; padding:3px 8px; font-family:var(--font-mono);}
+  .expand-btn:hover{border-color:var(--hoy); color:var(--hoy);}
+
+  footer{margin-top:30px; font-size:11.5px; color:var(--muted-2); font-family:var(--font-mono); line-height:1.7; border-top:1px solid var(--border); padding-top:16px;}
+</style>
+</head>
+<body>
+
+  <div class="topbar">
+    <div>
+      <p class="brand-eyebrow"><span class="dot"></span>Click Seguros · Gerencia 65</p>
+      <h1>Torre de Control de Órdenes de Trabajo</h1>
+      <p class="subtitle" id="subtitleText">Seguimiento de solicitudes de Emisión y Renovación pendientes de completar</p>
+    </div>
+    <div class="topbar-meta">
+      <strong id="metaFecha">—</strong>
+      <span id="metaTotal">— órdenes en seguimiento</span>
+    </div>
+  </div>
+
+  <div class="tabs" id="tabBar">
+    <button class="tab-btn" data-tab="Vigente">Vigentes <span class="tab-count" id="cntVigente">0</span></button>
+    <button class="tab-btn" data-tab="Cancelada">Canceladas <span class="tab-count" id="cntCancelada">0</span></button>
+    <button class="tab-btn" data-tab="No Renovada">No Renovadas <span class="tab-count" id="cntNoRenovada">0</span></button>
+  </div>
+
+  <div class="data-actions">
+    <input type="file" id="fileInput" accept=".csv" multiple style="display:none">
+    <button class="data-btn add" id="btnAddFile">+ Agregar archivo de registros</button>
+    <button class="data-btn danger" id="btnClearData">Eliminar archivo de registros</button>
+  </div>
+
+  <div class="kpi-row" id="kpiRow"></div>
+
+  <div class="section">
+    <div class="radar-card">
+      <div class="radar-head">
+        <h3 id="radarTitle">Radar de antigüedad — todas las órdenes, de la más vencida a la más reciente</h3>
+        <div class="legend" id="radarLegend"></div>
+      </div>
+      <div class="radar-strip" id="radarStrip"></div>
+      <div class="radar-foot" id="radarFoot">
+        <span id="radarFootLeft">← más urgente</span>
+        <span>cada barra = 1 orden · pasa el cursor para ver el detalle</span>
+        <span id="radarFootRight">en plazo →</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="section grid-2">
+    <div class="card">
+      <h3>Vendedores con más órdenes</h3>
+      <div id="rankVendedores" class="rank-list"></div>
+    </div>
+    <div class="card">
+      <h3>Aseguradoras con más órdenes</h3>
+      <div id="rankAseguradoras" class="rank-list"></div>
+    </div>
+  </div>
+
+  <div class="section grid-2">
+    <div class="card">
+      <h3>Por categoría</h3>
+      <div class="cat-tiles" id="catTiles"></div>
+    </div>
+    <div class="card">
+      <h3>Ramos más solicitados</h3>
+      <div id="rankRamos" class="rank-list"></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-head">
+      <div class="section-title" id="tableTitle">Detalle de órdenes pendientes</div>
+      <div class="section-note">clic en encabezado de columna para ordenar</div>
+    </div>
+
+    <div class="filter-bar">
+      <select id="fCat"><option value="">Categoría: todas</option></select>
+      <select id="fEstado"><option value="">Estado: todos</option></select>
+      <select id="fAseg"><option value="">Aseguradora: todas</option></select>
+      <select id="fRamo"><option value="">Ramo: todos</option></select>
+      <select id="fVend"><option value="">Vendedor: todos</option></select>
+      <select id="fFpago"><option value="">Pago: todos</option></select>
+      <input type="text" id="fQuery" placeholder="Buscar cliente o documento…">
+      <button class="clear-btn" id="btnClear">Limpiar filtros</button>
+      <span class="result-count" id="resultCount"></span>
+    </div>
+
+    <div class="table-card">
+      <table>
+        <thead>
+          <tr>
+            <th></th>
+            <th data-key="dent" id="thDays">Días</th>
+            <th data-key="doc">Documento</th>
+            <th data-key="aseg">Aseguradora / Ramo</th>
+            <th data-key="cliente">Cliente</th>
+            <th data-key="vend">Vendedor</th>
+            <th data-key="fpago">Pago</th>
+            <th data-key="fsol_iso">Solicitud</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <footer>
+    Fuente: archivo(s) de Órdenes cargados · Gerencia 65 · <span id="footCounts">— órdenes registradas</span>.<br>
+    En <b>Vigentes</b>, "Días" se calcula a partir del campo DEntrega del reporte: negativo = días de atraso sobre la fecha
+    de entrega comprometida; positivo = días que faltan.<br>
+    En <b>Canceladas</b> y <b>No Renovadas</b>, "Días gestión" es el tiempo transcurrido entre la fecha de solicitud y la fecha en que
+    se registró el estatus final; no existe una fecha de entrega comprometida para estos casos.<br>
+    Generado el <span id="footFecha"></span>.
+  </footer>
+
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 id="modalTitle">Informe</h3>
+        <button class="modal-x" id="modalX" aria-label="Cerrar">✕</button>
+      </div>
+      <div class="modal-body" id="modalBody"></div>
+      <div class="modal-footer">
+        <button class="modal-btn copy" id="modalCopy" title="Copia el informe en formato listo para WhatsApp">Copiar</button>
+        <button class="modal-btn close" id="modalClose">Cerrar</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+const BASELINE_DATA = [{"id": "658731", "doc": "OT-2025036242/CLICK", "cat": "Emisión", "aseg": "BUPA", "ramo": "Gastos Médicos Individual y Familiar", "cliente": "X Ramos Jesus Armando", "detalle": "GMFAM / X RAMOS JESUS ARM ...", "fpago": "Contado", "fsol": "10 jun 2025 · 8:55 a.m.", "fsol_iso": "2025-06-10T08:55:00", "vend": "Ventas Generales Herederos", "dent": 0, "estatus": "Cancelada", "estado": "normal", "dias_gestion": 20, "coment": "Buen día me puede enviar carta donde indican e ...", "cfecha": "Jun 30, 2025", "chora": "12:43PM"}, {"id": "783469", "doc": "OT-2026040371/CLICK", "cat": "Emisión", "aseg": "BANORTE", "ramo": "Gastos Médicos Grupo", "cliente": "Tres Prima Mexico, S.a. de C.v.", "detalle": "TRES PRIMA MEXICO, S.A. DE ...", "fpago": "Semestral", "fsol": "4 jun 2026 · 3:47 p.m.", "fsol_iso": "2026-06-04T15:47:00", "vend": "Hernandez Cuevas Oswaldo", "dent": 0, "estatus": "Cancelada", "estado": "rapida", "dias_gestion": 4, "coment": "Se establecio el documento como [Cancelada] y ...", "cfecha": "Jun 08, 2026", "chora": "12:53PM"}, {"id": "638525", "doc": "OT-2025021553/CLICK", "cat": "Renovación", "aseg": "QUALITAS", "ramo": "Taxis", "cliente": "Zetina Burelo Candelario", "detalle": "MA6CA5CD2JT028792 / 0 ...", "fpago": "Contado", "fsol": "3 abr 2025 · 10:06 p.m.", "fsol_iso": "2025-04-03T22:06:00", "vend": "Ventas Generales Herederos", "dent": 0, "estatus": "Cancelada", "estado": "lenta", "dias_gestion": 190, "coment": "Se establecio el documento como [Cancelada] y ...", "cfecha": "Oct 10, 2025", "chora": "8:28AM"}, {"id": "688633", "doc": "OT-2025057957/CLICK", "cat": "Renovación", "aseg": "MAPFRE", "ramo": "Automóviles Individuales", "cliente": "Castañeda Dussauge Norma Hilda", "detalle": "CHRYSLER - DODGE / GLS SD ...", "fpago": "Contado", "fsol": "12 sep 2025 · 4:27 p.m.", "fsol_iso": "2025-09-12T16:27:00", "vend": "Sanchez y Briseño Silvia Irene", "dent": 0, "estatus": "Cancelada", "estado": "lenta", "dias_gestion": 28, "coment": "Se establecio el documento como [Cancelada] y ...", "cfecha": "Oct 10, 2025", "chora": "9:18AM"}, {"id": "647821", "doc": "OT-2025028420/CLICK", "cat": "Renovación", "aseg": "QUALITAS", "ramo": "Automóviles Individuales", "cliente": "Soto Morales Jose Francisco", "detalle": "HONDA / CR-V / 2021 / 1HGR ...", "fpago": "Contado", "fsol": "7 may 2025 · 9:11 p.m.", "fsol_iso": "2025-05-07T21:11:00", "vend": "Rodriguez Castelan Maria Teresa", "dent": 0, "estatus": "Cancelada", "estado": "lenta", "dias_gestion": 156, "coment": "Se establecio el documento como [Cancelada] y ...", "cfecha": "Oct 10, 2025", "chora": "9:19AM"}, {"id": "709217", "doc": "OT-2025072697/CLICK", "cat": "Emisión", "aseg": "GNP", "ramo": "Automóviles Individuales", "cliente": "Escalante Uriostegui Maria Adriana", "detalle": "FORD / FIESTA / SEDAN FIRS ...", "fpago": "Mensual", "fsol": "12 nov 2025 · 12:19 p.m.", "fsol_iso": "2025-11-12T12:19:00", "vend": "Figueroa Paredes Victor Manuel", "dent": 0, "estatus": "Cancelada", "estado": "normal", "dias_gestion": 13, "coment": "Ok Gracias ...", "cfecha": "Nov 25, 2025", "chora": "4:11PM"}, {"id": "775677", "doc": "OT-2026035360/CLICK", "cat": "Emisión", "aseg": "GNP", "ramo": "Vida Individual", "cliente": "Hernandez Vicente Albertina", "detalle": "VINDI / HERNANDEZ VICENTE ...", "fpago": "Contado", "fsol": "15 may 2026 · 12:24 p.m.", "fsol_iso": "2026-05-15T12:24:00", "vend": "Espinosa Jimenez Julieta", "dent": 0, "estatus": "Cancelada", "estado": "rapida", "dias_gestion": 5, "coment": "Se establecio el documento como [Cancelada] y ...", "cfecha": "May 20, 2026", "chora": "12:22PM"}, {"id": "785914", "doc": "OT-2026042116/CLICK", "cat": "Emisión", "aseg": "BANORTE", "ramo": "Hogar", "cliente": "Dulce Maria Velazquez Sanchez - Lavanderia", "detalle": "Hogar / 0 ...", "fpago": "Contado", "fsol": "10 jun 2026 · 9:23 p.m.", "fsol_iso": "2026-06-10T21:23:00", "vend": "Hernandez Cuevas Oswaldo", "dent": -13, "estatus": "Vigente", "estado": "vencida", "dias_gestion": 0, "coment": "Se Adiciono la [Orden de Trabajo] con el Numer ...", "cfecha": "Jun 10, 2026", "chora": "9:23PM"}, {"id": "660488", "doc": "OT-2025037687/CLICK", "cat": "Emisión", "aseg": "AXA", "ramo": "Automóviles Individuales", "cliente": "Velasco Delgado Juan Erik", "detalle": "HONDA / CR-V / TURBO PLUS ...", "fpago": "Contado", "fsol": "16 jun 2025 · 2:55 p.m.", "fsol_iso": "2025-06-16T14:55:00", "vend": "Franco Baez Arturo", "dent": 0, "estatus": "Cancelada", "estado": "lenta", "dias_gestion": 37, "coment": "Se establecio el documento como [Cancelada] y ...", "cfecha": "Jul 23, 2025", "chora": "7:04PM"}, {"id": "756283", "doc": "OT-2026021900/CLICK", "cat": "Emisión", "aseg": "AXA", "ramo": "Gastos Médicos Individual y Familiar", "cliente": "Santillan Rueda Luis Enrique", "detalle": "GMFAM / SANTILLAN RUEDA LU ...", "fpago": "Mensual", "fsol": "23 mar 2026 · 9:39 p.m.", "fsol_iso": "2026-03-23T21:39:00", "vend": "Ramirez Jimenez Elias", "dent": 0, "estatus": "Cancelada", "estado": "lenta", "dias_gestion": 21, "coment": "Se establecio el documento como [Cancelada] y ...", "cfecha": "Apr 13, 2026", "chora": "6:13PM"}, {"id": "779740", "doc": "OT-2026038059/CLICK", "cat": "Emisión", "aseg": "MAPFRE", "ramo": "Gastos Médicos Individual y Familiar", "cliente": "Suck Bello Carlos Alberto", "detalle": "GMFAM / SUCK BELLO CARLOS ...", "fpago": "Contado", "fsol": "27 may 2026 · 1:23 p.m.", "fsol_iso": "2026-05-27T13:23:00", "vend": "Virues Rincon Victor Manuel", "dent": -31, "estatus": "Vigente", "estado": "vencida", "dias_gestion": 0, "coment": "Se Adiciono la [Orden de Trabajo] con el Numer ...", "cfecha": "May 27, 2026", "chora": "1:23PM"}, {"id": "783582", "doc": "OT-2026040474/CLICK", "cat": "Emisión", "aseg": "AXA", "ramo": "Gastos Médicos Individual y Familiar", "cliente": "Esparza Avendano Jose de Jesus", "detalle": "GMFAM / ESPARZA AVENDANO J ...", "fpago": "Mensual", "fsol": "4 jun 2026 · 5:56 p.m.", "fsol_iso": "2026-06-04T17:56:00", "vend": "Asencio Lozano Maria Teresa", "dent": -23, "estatus": "Vigente", "estado": "vencida", "dias_gestion": 7, "coment": "Buenos días! Me ayudas a ver cómo sigue el pro ...", "cfecha": "Jun 11, 2026", "chora": "9:22AM"}, {"id": "786059", "doc": "OT-2026042222/CLICK", "cat": "Emisión", "aseg": "QUALITAS", "ramo": "Automóviles Individuales", "cliente": "Mi Quincena Segura", "detalle": "CHEVROLET / SUBURBAN / HD ...", "fpago": "Contado", "fsol": "11 jun 2026 · 1:07 p.m.", "fsol_iso": "2026-06-11T13:07:00", "vend": "Ovalle Perez Tello Paulina", "dent": -16, "estatus": "Vigente", "estado": "vencida", "dias_gestion": 0, "coment": "Se Adiciono la [Orden de Trabajo] con el Numer ...", "cfecha": "Jun 11, 2026", "chora": "1:07PM"}, {"id": "790370", "doc": "OT-2026045060/CLICK", "cat": "Emisión", "aseg": "QUALITAS", "ramo": "Automóviles Individuales", "cliente": "Alegre Guerrero Rodrigo", "detalle": "VOLKSWAGEN / CROSS / SPORT ...", "fpago": "Contado", "fsol": "23 jun 2026 · 12:46 p.m.", "fsol_iso": "2026-06-23T12:46:00", "vend": "Hernandez Cuevas Oswaldo", "dent": -4, "estatus": "Vigente", "estado": "vencida", "dias_gestion": 0, "coment": "Se Adiciono la [Orden de Trabajo] con el Numer ...", "cfecha": "Jun 23, 2026", "chora": "12:46PM"}, {"id": "790383", "doc": "OT-2026045065/CLICK", "cat": "Emisión", "aseg": "ATLAS", "ramo": "Automóviles Individuales", "cliente": "Juarez Vazquez Luis Alberto", "detalle": "TOYOTA / YARIS / SEDAN COR ...", "fpago": "Mensual", "fsol": "23 jun 2026 · 1:01 p.m.", "fsol_iso": "2026-06-23T13:01:00", "vend": "Hernandez Cuevas Oswaldo", "dent": -4, "estatus": "Vigente", "estado": "vencida", "dias_gestion": 0, "coment": "Se Adiciono la [Orden de Trabajo] con el Numer ...", "cfecha": "Jun 23, 2026", "chora": "1:01PM"}, {"id": "790399", "doc": "OT-2026045073/CLICK", "cat": "Emisión", "aseg": "ATLAS", "ramo": "Empresariales", "cliente": "Up Inn de Mexico SA de CV", "detalle": "POLIZA DE SEGURO DE DAÑOS ...", "fpago": "Contado", "fsol": "23 jun 2026 · 1:31 p.m.", "fsol_iso": "2026-06-23T13:31:00", "vend": "Hernandez Cuevas Oswaldo", "dent": 0, "estatus": "Vigente", "estado": "hoy", "dias_gestion": 0, "coment": "Se Adiciono la [Orden de Trabajo] con el Numer ...", "cfecha": "Jun 23, 2026", "chora": "1:31PM"}, {"id": "791030", "doc": "OT-2026045509/CLICK", "cat": "Emisión", "aseg": "HDI", "ramo": "Flotilla de Vehículos", "cliente": "Fabricacion de Señalamientos Horizontales y Verticales, S.a. de C.v.", "detalle": "FLOTILLA ...", "fpago": "Trimestral", "fsol": "24 jun 2026 · 6:10 p.m.", "fsol_iso": "2026-06-24T18:10:00", "vend": "Hernandez Cuevas Oswaldo", "dent": 1, "estatus": "Vigente", "estado": "enplazo", "dias_gestion": 0, "coment": "Se Adiciono la [Orden de Trabajo] con el Numer ...", "cfecha": "Jun 24, 2026", "chora": "6:10PM"}, {"id": "792735", "doc": "OT-2026045523/CLICK", "cat": "Emisión", "aseg": "MAPFRE", "ramo": "Automóviles Individuales", "cliente": "Arzubide Aguilar Alma Elizabeth", "detalle": "RENAULT / FLUENCE / DYNAMI ...", "fpago": "Mensual", "fsol": "24 jun 2026 · 7:18 p.m.", "fsol_iso": "2026-06-24T19:18:00", "vend": "Hernandez Cuevas Oswaldo", "dent": -3, "estatus": "Vigente", "estado": "vencida", "dias_gestion": 0, "coment": "Se Adiciono la [Orden de Trabajo] con el Numer ...", "cfecha": "Jun 24, 2026", "chora": "7:18PM"}, {"id": "658681", "doc": "OT-2025036224/CLICK", "cat": "Renovación", "aseg": "MAPFRE", "ramo": "Flotilla de Vehículos", "cliente": "Grupo Lozano Migoya SA de CV", "detalle": "Automoviles / Amplia ...", "fpago": "Contado", "fsol": "9 jun 2025 · 8:04 p.m.", "fsol_iso": "2025-06-09T20:04:00", "vend": "Loria Cuevas Francisco Javier", "dent": 0, "estatus": "Cancelada", "estado": "lenta", "dias_gestion": 49, "coment": "Se establecio el documento como [Cancelada] y ...", "cfecha": "Jul 28, 2025", "chora": "7:58PM"}, {"id": "716297", "doc": "OT-2025077605/CLICK", "cat": "Emisión", "aseg": "CLICK SEGUROS", "ramo": "Equipo de Contratistas", "cliente": "Vu Combustibles", "detalle": "Equipo de Contratistas ...", "fpago": "Contado", "fsol": "3 dic 2025", "fsol_iso": "2025-12-03T00:00:00", "vend": "Vizcarra Cruz Dante Ismael", "dent": 0, "estatus": "Cancelada", "estado": "lenta", "dias_gestion": 79, "coment": "Se establecio el documento como [Cancelada] y ...", "cfecha": "Feb 20, 2026", "chora": "9:54AM"}, {"id": "765278", "doc": "OT-2026028246/CLICK", "cat": "Emisión", "aseg": "HDI", "ramo": "Automóviles Individuales", "cliente": "Mondragón En Celia Guadalupe", "detalle": "FORD / CAMIONETA FORD WIND ...", "fpago": "Contado", "fsol": "17 abr 2026 · 5:46 p.m.", "fsol_iso": "2026-04-17T17:46:00", "vend": "Mondragón En Celia Guadalupe", "dent": -71, "estatus": "Vigente", "estado": "vencida", "dias_gestion": 0, "coment": "Se Adiciono la [Orden de Trabajo] con el Numer ...", "cfecha": "Apr 17, 2026", "chora": "5:46PM"}, {"id": "792844", "doc": "OT-2026045544/CLICK", "cat": "Renovación", "aseg": "ZURICH", "ramo": "Automóviles Individuales", "cliente": "Jvr Trading Services Limited SA de CV", "detalle": "TOYOTA / AVANZA / 2016/PRE ...", "fpago": "Contado", "fsol": "24 jun 2026 · 11:01 p.m.", "fsol_iso": "2026-06-24T23:01:00", "vend": "Espinosa Jimenez Julieta", "dent": -3, "estatus": "Vigente", "estado": "vencida", "dias_gestion": 0, "coment": "Se Procedio a Renovar el Documento 111996859 ...", "cfecha": "Jun 24, 2026", "chora": "11:01PM"}, {"id": "649627", "doc": "OT-2025029782/CLICK", "cat": "Renovación", "aseg": "QUALITAS", "ramo": "Automóviles Individuales", "cliente": "Mayorga Figueroa Ma Lourdes", "detalle": "MERCEDES BENZ / E-320 / 20 ...", "fpago": "Contado", "fsol": "13 may 2025 · 7:20 p.m.", "fsol_iso": "2025-05-13T19:20:00", "vend": "Hernandez Martinez Roque Natanael", "dent": 0, "estatus": "Cancelada", "estado": "rapida", "dias_gestion": 3, "coment": "Buen dia me comenta mi cliente que el no ha re ...", "cfecha": "May 16, 2025", "chora": "8:56AM"}, {"id": "716670", "doc": "OT-2025077910/CLICK", "cat": "Emisión", "aseg": "CLICK SEGUROS", "ramo": "Equipo de Contratistas", "cliente": "Vu Combustibles", "detalle": "Equipo de Contratistas ...", "fpago": "Contado", "fsol": "4 dic 2025", "fsol_iso": "2025-12-04T00:00:00", "vend": "Vizcarra Cruz Dante Ismael", "dent": 0, "estatus": "Cancelada", "estado": "lenta", "dias_gestion": 78, "coment": "Se establecio el documento como [Cancelada] y ...", "cfecha": "Feb 20, 2026", "chora": "9:54AM"}, {"id": "782250", "doc": "OT-2026039527/CLICK", "cat": "Renovación", "aseg": "MAPFRE", "ramo": "Automóviles Individuales", "cliente": "Soriano Lima Bernardino Epigmenio", "detalle": "NISSAN / MARCH / 2018/SENS ...", "fpago": "Contado", "fsol": "1 jun 2026 · 11:43 p.m.", "fsol_iso": "2026-06-01T23:43:00", "vend": "Ovalle Perez Tello Paulina", "dent": -26, "estatus": "Vigente", "estado": "vencida", "dias_gestion": 0, "coment": "Se Procedio a Renovar el Documento 41025000916 ...", "cfecha": "Jun 01, 2026", "chora": "11:43PM"}, {"id": "782252", "doc": "OT-2026039529/CLICK", "cat": "Renovación", "aseg": "MAPFRE", "ramo": "Automóviles Individuales", "cliente": "Alvarez Cruz Maria Elisa", "detalle": "TOYOTA / C-HR / 2019/BASE ...", "fpago": "Contado", "fsol": "1 jun 2026 · 11:44 p.m.", "fsol_iso": "2026-06-01T23:44:00", "vend": "Ovalle Perez Tello Paulina", "dent": -26, "estatus": "Vigente", "estado": "vencida", "dias_gestion": 0, "coment": "Se Procedio a Renovar el Documento 41025000902 ...", "cfecha": "Jun 01, 2026", "chora": "11:44PM"}, {"id": "782253", "doc": "OT-2026039530/CLICK", "cat": "Renovación", "aseg": "MAPFRE", "ramo": "Automóviles Individuales", "cliente": "Cureño Hernandez Carolina", "detalle": "TOYOTA / COROLLA / 2014/LE ...", "fpago": "Contado", "fsol": "1 jun 2026 · 11:45 p.m.", "fsol_iso": "2026-06-01T23:45:00", "vend": "Ovalle Perez Tello Paulina", "dent": -26, "estatus": "Vigente", "estado": "vencida", "dias_gestion": 0, "coment": "Se Procedio a Renovar el Documento 41025000900 ...", "cfecha": "Jun 01, 2026", "chora": "11:45PM"}, {"id": "782254", "doc": "OT-2026039531/CLICK", "cat": "Renovación", "aseg": "MAPFRE", "ramo": "Automóviles Individuales", "cliente": "Villanueva Alaniz Israel", "detalle": "HONDA / ODYSSEY / 2005/LX ...", "fpago": "Mensual", "fsol": "1 jun 2026 · 11:46 p.m.", "fsol_iso": "2026-06-01T23:46:00", "vend": "Alvarado García Sergio Germán", "dent": -26, "estatus": "Vigente", "estado": "vencida", "dias_gestion": 0, "coment": "Se Procedio a Renovar el Documento 41025000883 ...", "cfecha": "Jun 01, 2026", "chora": "11:46PM"}, {"id": "782257", "doc": "OT-2026039534/CLICK", "cat": "Renovación", "aseg": "MAPFRE", "ramo": "Automóviles Individuales", "cliente": "Encarnacion Alejo Saray", "detalle": "RENAULT / DUSTER / 2020/ZE ...", "fpago": "Contado", "fsol": "1 jun 2026 · 11:48 p.m.", "fsol_iso": "2026-06-01T23:48:00", "vend": "Ovalle Perez Tello Paulina", "dent": -26, "estatus": "Vigente", "estado": "vencida", "dias_gestion": 0, "coment": "Se Procedio a Renovar el Documento 41025000876 ...", "cfecha": "Jun 01, 2026", "chora": "11:48PM"}, {"id": "782258", "doc": "OT-2026039535/CLICK", "cat": "Renovación", "aseg": "MAPFRE", "ramo": "Automóviles Individuales", "cliente": "Deroeux Francois Michel Eric", "detalle": "FORD / FIESTA / 2015 / STD ...", "fpago": "Contado", "fsol": "1 jun 2026 · 11:48 p.m.", "fsol_iso": "2026-06-01T23:48:00", "vend": "Chavarria Jiménez Juan Luis", "dent": -26, "estatus": "Vigente", "estado": "vencida", "dias_gestion": 0, "coment": "Se Procedio a Renovar el Documento 41024000746 ...", "cfecha": "Jun 01, 2026", "chora": "11:48PM"}, {"id": "782259", "doc": "OT-2026039536/CLICK", "cat": "Renovación", "aseg": "MAPFRE", "ramo": "Automóviles Individuales", "cliente": "Braun Guillen Monica Iliana", "detalle": "FIAT / UNO / 2018/WAY 4P L ...", "fpago": "Contado", "fsol": "1 jun 2026 · 11:49 p.m.", "fsol_iso": "2026-06-01T23:49:00", "vend": "Sanchez y Briseño Silvia Irene", "dent": -26, "estatus": "Vigente", "estado": "vencida", "dias_gestion": 0, "coment": "Se Procedio a Renovar el Documento 41025000847 ...", "cfecha": "Jun 01, 2026", "chora": "11:49PM"}, {"id": "782261", "doc": "OT-2026039538/CLICK", "cat": "Renovación", "aseg": "MAPFRE", "ramo": "Automóviles Individuales", "cliente": "Escobedo Rodriguez Jose Ruben", "detalle": "JEEP / PATRIOT / 2015/LATI ...", "fpago": "Contado", "fsol": "1 jun 2026 · 11:50 p.m.", "fsol_iso": "2026-06-01T23:50:00", "vend": "Escobedo Rodriguez Angel", "dent": -26, "estatus": "Vigente", "estado": "vencida", "dias_gestion": 0, "coment": "Se Procedio a Renovar el Documento 41025000841 ...", "cfecha": "Jun 01, 2026", "chora": "11:50PM"}, {"id": "793372", "doc": "OT-2026045923/CLICK", "cat": "Renovación", "aseg": "MAPFRE", "ramo": "Pick Ups Particular", "cliente": "Agroindustrial Biotech", "detalle": "CHRYSLER - DODGE / RAM 700 ...", "fpago": "Contado", "fsol": "25 jun 2026 · 11:07 p.m.", "fsol_iso": "2026-06-25T23:07:00", "vend": "Ovalle Perez Tello Paulina", "dent": -2, "estatus": "Vigente", "estado": "vencida", "dias_gestion": 0, "coment": "Se Procedio a Renovar el Documento 41025001105 ...", "cfecha": "Jun 25, 2026", "chora": "11:07PM"}, {"id": "793373", "doc": "OT-2026045924/CLICK", "cat": "Renovación", "aseg": "MAPFRE", "ramo": "Automóviles Individuales", "cliente": "Aviña Rosales Victor Manuel", "detalle": "FORD / FOCUS / 2000/LX BAS ...", "fpago": "Contado", "fsol": "25 jun 2026 · 11:08 p.m.", "fsol_iso": "2026-06-25T23:08:00", "vend": "Ybarra Reyes Armando", "dent": -2, "estatus": "Vigente", "estado": "vencida", "dias_gestion": 0, "coment": "Se Procedio a Renovar el Documento 41025001109 ...", "cfecha": "Jun 25, 2026", "chora": "11:08PM"}, {"id": "793374", "doc": "OT-2026045925/CLICK", "cat": "Renovación", "aseg": "MAPFRE", "ramo": "Automóviles Individuales", "cliente": "Cedillo Alcantara Veronica", "detalle": "GMOTORS / ACADIA / 2016 / ...", "fpago": "Contado", "fsol": "25 jun 2026 · 11:10 p.m.", "fsol_iso": "2026-06-25T23:10:00", "vend": "Hernandez Colin Wendy Violeta", "dent": -2, "estatus": "Vigente", "estado": "vencida", "dias_gestion": 0, "coment": "Se Procedio a Renovar el Documento 41024000959 ...", "cfecha": "Jun 25, 2026", "chora": "11:10PM"}, {"id": "743446", "doc": "OT-2026012597/CLICK", "cat": "Emisión", "aseg": "BUPA", "ramo": "Gastos Médicos Individual y Familiar", "cliente": "Frettlohr Rosas Enrique de Jesus", "detalle": "GMFAM / FRETTLOHR ROSAS EN ...", "fpago": "Contado", "fsol": "17 feb 2026 · 2:18 p.m.", "fsol_iso": "2026-02-17T14:18:00", "vend": "Figueroa Paredes Victor Manuel", "dent": 0, "estatus": "Cancelada", "estado": "normal", "dias_gestion": 9, "coment": "Se establecio el documento como [Cancelada] y ...", "cfecha": "Feb 26, 2026", "chora": "11:45PM"}, {"id": "763533", "doc": "OT-2026027147/CLICK", "cat": "Emisión", "aseg": "INBURSA", "ramo": "Automóviles Individuales", "cliente": "Ramirez Verduzco Irvin", "detalle": "VOLKSWAGEN / JETTA A4 GL / ...", "fpago": "Mensual", "fsol": "14 abr 2026 · 2:13 p.m.", "fsol_iso": "2026-04-14T14:13:00", "vend": "Ruiz Loyola Nadia", "dent": 0, "estatus": "Cancelada", "estado": "normal", "dias_gestion": 15, "coment": "Buen dia poliza ya capturada con numero 14406 ...", "cfecha": "Apr 29, 2026", "chora": "10:45AM"}, {"id": "790571", "doc": "OT-2026045180/CLICK", "cat": "Emisión", "aseg": "PREVEM", "ramo": "Gastos Médicos Individual y Familiar", "cliente": "Contreras X Sandra Patricia", "detalle": "GMFAM / AGUIRRE CONTRERAS ...", "fpago": "Contado", "fsol": "23 jun 2026 · 5:54 p.m.", "fsol_iso": "2026-06-23T17:54:00", "vend": "Espinosa Jimenez Julieta", "dent": -4, "estatus": "Vigente", "estado": "vencida", "dias_gestion": 2, "coment": "Hola, la emisión de tu cotización ya fue solic ...", "cfecha": "Jun 25, 2026", "chora": "9:06PM"}, {"id": "793365", "doc": "OT-2026045916/CLICK", "cat": "Renovación", "aseg": "MAPFRE", "ramo": "Automóviles Individuales", "cliente": "Ramirez Segura Luis Alfredo", "detalle": "BMW / 325I / 2008/M SPORT ...", "fpago": "Contado", "fsol": "25 jun 2026 · 10:58 p.m.", "fsol_iso": "2026-06-25T22:58:00", "vend": "Ovalle Perez Tello Paulina", "dent": -2, "estatus": "Vigente", "estado": "vencida", "dias_gestion": 0, "coment": "Se Procedio a Renovar el Documento 41025000983 ...", "cfecha": "Jun 25, 2026", "chora": "10:58PM"}, {"id": "793366", "doc": "OT-2026045917/CLICK", "cat": "Renovación", "aseg": "MAPFRE", "ramo": "Automóviles Individuales", "cliente": "Calderon Luna Eduardo", "detalle": "MAZDA / 3 / 2020/HB I GRAN ...", "fpago": "Trimestral", "fsol": "25 jun 2026 · 11:00 p.m.", "fsol_iso": "2026-06-25T23:00:00", "vend": "Calderon Suarez Irvin Omar", "dent": -2, "estatus": "Vigente", "estado": "vencida", "dias_gestion": 0, "coment": "Se Procedio a Renovar el Documento 41025000994 ...", "cfecha": "Jun 25, 2026", "chora": "11:00PM"}, {"id": "793367", "doc": "OT-2026045918/CLICK", "cat": "Renovación", "aseg": "MAPFRE", "ramo": "Automóviles Individuales", "cliente": "Toriz Roldan Arturo", "detalle": "1J4GX58N44C430703 ...", "fpago": "Semestral", "fsol": "25 jun 2026 · 11:01 p.m.", "fsol_iso": "2026-06-25T23:01:00", "vend": "Sanchez y Briseño Silvia Irene", "dent": -2, "estatus": "Vigente", "estado": "vencida", "dias_gestion": 0, "coment": "Se Procedio a Renovar el Documento 41024000873 ...", "cfecha": "Jun 25, 2026", "chora": "11:01PM"}, {"id": "793368", "doc": "OT-2026045919/CLICK", "cat": "Renovación", "aseg": "MAPFRE", "ramo": "Automóviles Individuales", "cliente": "Ruiz Flores Maria de Los Angeles", "detalle": "RENAULT / STEPWAY / 2010 / ...", "fpago": "Mensual", "fsol": "25 jun 2026 · 11:02 p.m.", "fsol_iso": "2026-06-25T23:02:00", "vend": "Araiza Ramos Liliana", "dent": -2, "estatus": "Vigente", "estado": "vencida", "dias_gestion": 0, "coment": "Se Procedio a Renovar el Documento 40122002000 ...", "cfecha": "Jun 25, 2026", "chora": "11:02PM"}, {"id": "793369", "doc": "OT-2026045920/CLICK", "cat": "Renovación", "aseg": "MAPFRE", "ramo": "Automóviles Individuales", "cliente": "Galvez Collado Juan Antonio", "detalle": "FORD / MUSTANG / 2015/50 A ...", "fpago": "Contado", "fsol": "25 jun 2026 · 11:03 p.m.", "fsol_iso": "2026-06-25T23:03:00", "vend": "Ovalle Perez Tello Paulina", "dent": -2, "estatus": "Vigente", "estado": "vencida", "dias_gestion": 0, "coment": "Se Procedio a Renovar el Documento 41025001085 ...", "cfecha": "Jun 25, 2026", "chora": "11:03PM"}, {"id": "793370", "doc": "OT-2026045921/CLICK", "cat": "Renovación", "aseg": "MAPFRE", "ramo": "Automóviles Individuales", "cliente": "Galvez Collado Juan Antonio", "detalle": "SEAT / IBIZA / 2018/STYLE ...", "fpago": "Contado", "fsol": "25 jun 2026 · 11:04 p.m.", "fsol_iso": "2026-06-25T23:04:00", "vend": "Ovalle Perez Tello Paulina", "dent": -2, "estatus": "Vigente", "estado": "vencida", "dias_gestion": 0, "coment": "Se Procedio a Renovar el Documento 41025001087 ...", "cfecha": "Jun 25, 2026", "chora": "11:04PM"}, {"id": "793371", "doc": "OT-2026045922/CLICK", "cat": "Renovación", "aseg": "MAPFRE", "ramo": "Pick Ups Particular", "cliente": "Agroindustrial Biotech", "detalle": "CHRYSLER - DODGE / RAM 700 ...", "fpago": "Contado", "fsol": "25 jun 2026 · 11:06 p.m.", "fsol_iso": "2026-06-25T23:06:00", "vend": "Ovalle Perez Tello Paulina", "dent": -2, "estatus": "Vigente", "estado": "vencida", "dias_gestion": 0, "coment": "Se Procedio a Renovar el Documento 41025001105 ...", "cfecha": "Jun 25, 2026", "chora": "11:06PM"}, {"id": "786726", "doc": "OT-2026042588/CLICK", "cat": "Emisión", "aseg": "QUALITAS", "ramo": "Pick Ups Particular", "cliente": "Gonzalez Cadenas Maria Marcela", "detalle": "NISSAN / PICK UP CA ABS, ...", "fpago": "Contado", "fsol": "12 jun 2026 · 6:13 p.m.", "fsol_iso": "2026-06-12T18:13:00", "vend": "Salinas Colin Diana", "dent": -15, "estatus": "Vigente", "estado": "vencida", "dias_gestion": 0, "coment": "Se Adiciono la [Orden de Trabajo] con el Numer ...", "cfecha": "Jun 12, 2026", "chora": "6:13PM"}, {"id": "681088", "doc": "OT-2025052632/CLICK", "cat": "Renovación", "aseg": "QUALITAS", "ramo": "Pick Ups Particular", "cliente": "Ibanez Tobon Sonia Lucero", "detalle": "NISSAN / NP300 / 2018 / 3N ...", "fpago": "Contado", "fsol": "19 ago 2025 · 10:50 p.m.", "fsol_iso": "2025-08-19T22:50:00", "vend": "Rojas Leon Moises", "dent": 0, "estatus": "Cancelada", "estado": "rapida", "dias_gestion": 3, "coment": "Se establecio el documento como [Cancelada] y ...", "cfecha": "Aug 22, 2025", "chora": "9:30PM"}, {"id": "641721", "doc": "OT-2025023896/CLICK", "cat": "Emisión", "aseg": "QUALITAS", "ramo": "Taxis", "cliente": "Jimenez Javier Irving", "detalle": "NISSAN / TSURU GSI 5VEL AU ...", "fpago": "Contado", "fsol": "15 abr 2025 · 11:04 a.m.", "fsol_iso": "2025-04-15T11:04:00", "vend": "Jimenez Javier Irving", "dent": 0, "estatus": "Cancelada", "estado": "lenta", "dias_gestion": 188, "coment": "Se establecio el documento como [Cancelada] y ...", "cfecha": "Oct 20, 2025", "chora": "12:36PM"}, {"id": "621610", "doc": "OT-2025008441/CLICK", "cat": "Renovación", "aseg": "QUALITAS", "ramo": "Transporte Publico", "cliente": "Gutiérrez Ortiz Maria Guadalupe", "detalle": "TRAPUB / NISSAN / TIIDA SE ...", "fpago": "Contado", "fsol": "6 feb 2025 · 2:42 p.m.", "fsol_iso": "2025-02-06T14:42:00", "vend": "Hernandez Martinez Roque Natanael", "dent": 0, "estatus": "No Renovada", "estado": "normal", "dias_gestion": 19, "coment": "Se establecio el documento como [No Renovada] ...", "cfecha": "Feb 25, 2025", "chora": "7:05PM"}, {"id": "719200", "doc": "OT-2025079802/CLICK", "cat": "Emisión", "aseg": "CLICK SEGUROS", "ramo": "Equipo de Contratistas", "cliente": "Vu Combustibles", "detalle": "Equipo de Contratistas ...", "fpago": "Contado", "fsol": "11 dic 2025", "fsol_iso": "2025-12-11T00:00:00", "vend": "Vizcarra Cruz Dante Ismael", "dent": 0, "estatus": "Cancelada", "estado": "lenta", "dias_gestion": 90, "coment": "Se establecio el documento como [Cancelada] y ...", "cfecha": "Mar 11, 2026", "chora": "5:06PM"}, {"id": "615064", "doc": "OT-2025003517/CLICK", "cat": "Emisión", "aseg": "BANORTE", "ramo": "Automóviles Individuales", "cliente": "Ruiz Cabrera Raul", "detalle": "MAZDA / CX-5 S GRAND TOURI ...", "fpago": "Contado", "fsol": "17 ene 2025 · 12:00 p.m.", "fsol_iso": "2025-01-17T12:00:00", "vend": "Ruiz Cabrera Raul", "dent": 0, "estatus": "Cancelada", "estado": "lenta", "dias_gestion": 147, "coment": "Se establecio el documento como [Cancelada] y ...", "cfecha": "Jun 13, 2025", "chora": "11:09AM"}, {"id": "616017", "doc": "OT-2025004214/CLICK", "cat": "Emisión", "aseg": "MAPFRE", "ramo": "Gastos Médicos Individual y Familiar", "cliente": "Calderon Suarez Irvin Omar", "detalle": "GMFAM ...", "fpago": "Contado", "fsol": "21 ene 2025 · 11:45 a.m.", "fsol_iso": "2025-01-21T11:45:00", "vend": "Calderon Suarez Irvin Omar", "dent": 0, "estatus": "Cancelada", "estado": "lenta", "dias_gestion": 143, "coment": "Se establecio el documento como [Cancelada] y ...", "cfecha": "Jun 13, 2025", "chora": "11:09AM"}, {"id": "698587", "doc": "OT-2025065311/CLICK", "cat": "Emisión", "aseg": "QUALITAS", "ramo": "Camiones Individuales", "cliente": "Hernandez Hernandez Evaristo Aurelio", "detalle": "CAM / EQ / 52K 6X4 MBE 280 ...", "fpago": "Contado", "fsol": "14 oct 2025 · 6:23 p.m.", "fsol_iso": "2025-10-14T18:23:00", "vend": "Ovalle Perez Tello Paulina", "dent": 0, "estatus": "Cancelada", "estado": "normal", "dias_gestion": 15, "coment": "Se establecio el documento como [Cancelada] y ...", "cfecha": "Oct 29, 2025", "chora": "1:28AM"}, {"id": "698588", "doc": "OT-2025065312/CLICK", "cat": "Emisión", "aseg": "QUALITAS", "ramo": "Camiones Individuales", "cliente": "Hernandez Hernandez Evaristo Aurelio", "detalle": "CAM / EQ / T-370 6X4 CHASI ...", "fpago": "Contado", "fsol": "14 oct 2025 · 6:30 p.m.", "fsol_iso": "2025-10-14T18:30:00", "vend": "Ovalle Perez Tello Paulina", "dent": 0, "estatus": "Cancelada", "estado": "normal", "dias_gestion": 15, "coment": "Se establecio el documento como [Cancelada] y ...", "cfecha": "Oct 29, 2025", "chora": "1:33AM"}, {"id": "693415", "doc": "OT-2025061268/CLICK", "cat": "Emisión", "aseg": "QUALITAS", "ramo": "Automóviles Individuales", "cliente": "Briano Macias Edna Maricela", "detalle": "CHEVROLET / Extended Cab W ...", "fpago": "Contado", "fsol": "30 sep 2025 · 11:58 a.m.", "fsol_iso": "2025-09-30T11:58:00", "vend": "Briano Macias Edna Maricela", "dent": 0, "estatus": "Cancelada", "estado": "lenta", "dias_gestion": 29, "coment": "Se establecio el documento como [Cancelada] y ...", "cfecha": "Oct 29, 2025", "chora": "11:08AM"}, {"id": "743141", "doc": "OT-2026012407/CLICK", "cat": "Emisión", "aseg": "BUPA", "ramo": "Gastos Médicos Individual y Familiar", "cliente": "Ortiz Bahena Miguel Angel", "detalle": "GMFAM / ortiz bahena migue ...", "fpago": "Contado", "fsol": "16 feb 2026 · 7:39 p.m.", "fsol_iso": "2026-02-16T19:39:00", "vend": "Corona Ledesma Cesar", "dent": 0, "estatus": "Cancelada", "estado": "lenta", "dias_gestion": 25, "coment": "Se establecio el documento como [Cancelada] y ...", "cfecha": "Mar 13, 2026", "chora": "10:49PM"}, {"id": "756720", "doc": "OT-2026022232/CLICK", "cat": "Emisión", "aseg": "GNP", "ramo": "Vida Individual", "cliente": "Castrejon Zarate Heli", "detalle": "VINDI / CASTREJON ZARATE H ...", "fpago": "Contado", "fsol": "25 mar 2026 · 12:09 a.m.", "fsol_iso": "2026-03-25T00:09:00", "vend": "Figueroa Paredes Victor Manuel", "dent": 0, "estatus": "Cancelada", "estado": "lenta", "dias_gestion": 83, "coment": "Se establecio el documento como [Cancelada] y ...", "cfecha": "Jun 16, 2026", "chora": "2:46PM"}, {"id": "788286", "doc": "OT-2026043466/CLICK", "cat": "Emisión", "aseg": "QUALITAS", "ramo": "Pick Ups Particular", "cliente": "Cervantes Barrera Saúl Abraham", "detalle": "CHEVROLET / BEAT SEDAN LT ...", "fpago": "Trimestral", "fsol": "16 jun 2026 · 5:20 p.m.", "fsol_iso": "2026-06-16T17:20:00", "vend": "Cervantes Barrera Saúl Abraham", "dent": -11, "estatus": "Vigente", "estado": "vencida", "dias_gestion": 0, "coment": "Se Adiciono la [Orden de Trabajo] con el Numer ...", "cfecha": "Jun 16, 2026", "chora": "5:20PM"}, {"id": "788496", "doc": "OT-2026043601/CLICK", "cat": "Emisión", "aseg": "QUALITAS", "ramo": "Camiones Individuales", "cliente": "Gayosso Cano Jaime Hugo", "detalle": "CAM / TR / VNL 64T 430 STD ...", "fpago": "Trimestral", "fsol": "17 jun 2026 · 11:53 a.m.", "fsol_iso": "2026-06-17T11:53:00", "vend": "Hernandez Cuevas Oswaldo", "dent": -8, "estatus": "Vigente", "estado": "vencida", "dias_gestion": 0, "coment": "Se Adiciono la [Orden de Trabajo] con el Numer ...", "cfecha": "Jun 17, 2026", "chora": "11:53AM"}, {"id": "788504", "doc": "OT-2026043610/CLICK", "cat": "Emisión", "aseg": "QUALITAS", "ramo": "Automóviles Individuales", "cliente": "Becerril Moron Edgar Israel", "detalle": "HYUNDAI / TUCSON / GLS 5P ...", "fpago": "Mensual", "fsol": "17 jun 2026 · 12:01 p.m.", "fsol_iso": "2026-06-17T12:01:00", "vend": "Hernandez Cuevas Oswaldo", "dent": -10, "estatus": "Vigente", "estado": "vencida", "dias_gestion": 0, "coment": "Se Adiciono la [Orden de Trabajo] con el Numer ...", "cfecha": "Jun 17, 2026", "chora": "12:01PM"}, {"id": "793747", "doc": "OT-2026046183/CLICK", "cat": "Emisión", "aseg": "BANORTE", "ramo": "Empresariales", "cliente": "Maquiladora Mexicana de Mobiliario SAS de CV", "detalle": "POLIZA DE SEGURO DE DAÑOS ...", "fpago": "Semestral", "fsol": "26 jun 2026 · 4:16 p.m.", "fsol_iso": "2026-06-26T16:16:00", "vend": "Hernandez Cuevas Oswaldo", "dent": 3, "estatus": "Vigente", "estado": "enplazo", "dias_gestion": 0, "coment": "Se Adiciono la [Orden de Trabajo] con el Numer ...", "cfecha": "Jun 26, 2026", "chora": "4:16PM"}, {"id": "689614", "doc": "OT-2025058590/CLICK", "cat": "Emisión", "aseg": "QUALITAS", "ramo": "Pick Ups Particular", "cliente": "Armas Rodriguez Alexis Rafael", "detalle": "GMC / PAQUETE A\", MOTOR 6 ...\"", "fpago": "Contado", "fsol": "18 sep 2025 · 12:17 p.m.", "fsol_iso": "2025-09-18T12:17:00", "vend": "Ventas Generales Herederos", "dent": 0, "estatus": "Cancelada", "estado": "lenta", "dias_gestion": 42, "coment": "Se establecio el documento como [Cancelada] y ...", "cfecha": "Oct 30, 2025", "chora": "7:08PM"}, {"id": "755513", "doc": "OT-2026021306/CLICK", "cat": "Emisión", "aseg": "HDI", "ramo": "Automóviles Individuales", "cliente": "Romero Ramirez Reyna Afrodita", "detalle": "FORD / FIGO IMPULSE,SEDAN, ...", "fpago": "Contado", "fsol": "20 mar 2026 · 2:16 p.m.", "fsol_iso": "2026-03-20T14:16:00", "vend": "Romero Ramirez Reyna Afrodita", "dent": -99, "estatus": "Vigente", "estado": "vencida", "dias_gestion": 0, "coment": "Se Adiciono la [Orden de Trabajo] con el Numer ...", "cfecha": "Mar 20, 2026", "chora": "2:16PM"}, {"id": "752882", "doc": "OT-2026019315/CLICK", "cat": "Emisión", "aseg": "GNP", "ramo": "Gastos Médicos Individual y Familiar", "cliente": "Herrera Nochebuena Rafaela Dora Ma", "detalle": "GMFAM / herrera nochebuena ...", "fpago": "Contado", "fsol": "12 mar 2026 · 7:02 p.m.", "fsol_iso": "2026-03-12T19:02:00", "vend": "Castelan Herrera Marissa Carime", "dent": -107, "estatus": "Vigente", "estado": "vencida", "dias_gestion": 6, "coment": "QUE PROSIGUE?? ...", "cfecha": "Mar 18, 2026", "chora": "12:14PM"}, {"id": "744504", "doc": "OT-2026013149/CLICK", "cat": "Emisión", "aseg": "MOMENTO", "ramo": "Automóviles Individuales", "cliente": "Hernandez Chavez Raul", "detalle": "MG / ZS / 2021 / STYLE 5P ...", "fpago": "Contado", "fsol": "19 feb 2026", "fsol_iso": "2026-02-19T00:00:00", "vend": "Barcenas Jimenez Luis Leopoldo", "dent": 0, "estatus": "Cancelada", "estado": "lenta", "dias_gestion": 85, "coment": "Se establecio el documento como [Cancelada] y ...", "cfecha": "May 15, 2026", "chora": "11:00AM"}, {"id": "657049", "doc": "OT-2025034992/CLICK", "cat": "Emisión", "aseg": "BUPA", "ramo": "Gastos Médicos Individual y Familiar", "cliente": "Martinez Rodriguez Natalia", "detalle": "GMFAM / MARTINEZ RODRIGUEZ ...", "fpago": "Mensual", "fsol": "4 jun 2025 · 10:45 a.m.", "fsol_iso": "2025-06-04T10:45:00", "vend": "Ventas Generales Herederos", "dent": 0, "estatus": "Cancelada", "estado": "normal", "dias_gestion": 13, "coment": "Se establecio el documento como [Cancelada] y ...", "cfecha": "Jun 17, 2025", "chora": "4:46PM"}, {"id": "686896", "doc": "OT-2025056672/CLICK", "cat": "Emisión", "aseg": "QUALITAS", "ramo": "Automóviles Individuales", "cliente": "Fernandez de Jauregui Carro Jose Adalberto", "detalle": "DODGE / GRAND CARAVAN / SX ...", "fpago": "Contado", "fsol": "8 sep 2025 · 12:34 p.m.", "fsol_iso": "2025-09-08T12:34:00", "vend": "Ovalle Perez Tello Paulina", "dent": 0, "estatus": "Cancelada", "estado": "lenta", "dias_gestion": 21, "coment": "Se establecio el documento como [Cancelada] y ...", "cfecha": "Sep 29, 2025", "chora": "10:29AM"}, {"id": "617610", "doc": "OT-2025005452/CLICK", "cat": "Emisión", "aseg": "QUALITAS", "ramo": "Transporte Publico", "cliente": "Garduno Garduno Jesus", "detalle": "TRAPUB / NISSAN / TSURU GS ...", "fpago": "Contado", "fsol": "24 ene 2025 · 11:10 a.m.", "fsol_iso": "2025-01-24T11:10:00", "vend": "Alvarez Acosta Dulce Fabiola", "dent": 0, "estatus": "Cancelada", "estado": "lenta", "dias_gestion": 140, "coment": "Se establecio el documento como [Cancelada] y ...", "cfecha": "Jun 13, 2025", "chora": "11:09AM"}, {"id": "618471", "doc": "OT-2025006081/CLICK", "cat": "Emisión", "aseg": "GNP", "ramo": "Automóviles Individuales", "cliente": "Ovalle Perez Tello Paulina", "detalle": "MAZADA / CX-5 S GRAND TOUR ...", "fpago": "Contado", "fsol": "27 ene 2025 · 5:16 p.m.", "fsol_iso": "2025-01-27T17:16:00", "vend": "Ovalle Perez Tello Paulina", "dent": 0, "estatus": "Cancelada", "estado": "lenta", "dias_gestion": 137, "coment": "Se establecio el documento como [Cancelada] y ...", "cfecha": "Jun 13, 2025", "chora": "11:09AM"}, {"id": "622218", "doc": "OT-2025008951/CLICK", "cat": "Emisión", "aseg": "HDI", "ramo": "Automóviles Individuales", "cliente": "Uribe Roldan Claudia", "detalle": "CHEVROLET / SPARK LT, L4, ...", "fpago": "Contado", "fsol": "7 feb 2025 · 11:09 p.m.", "fsol_iso": "2025-02-07T23:09:00", "vend": "Uribe Roldan Claudia", "dent": 0, "estatus": "Cancelada", "estado": "lenta", "dias_gestion": 126, "coment": "Se establecio el documento como [Cancelada] y ...", "cfecha": "Jun 13, 2025", "chora": "11:09AM"}, {"id": "623695", "doc": "OT-2025010108/CLICK", "cat": "Emisión", "aseg": "AXA", "ramo": "Automóviles Individuales", "cliente": "Ybarra Reyes Armando", "detalle": "CHEVROLET / AVEO LT STD 4P ...", "fpago": "Contado", "fsol": "13 feb 2025 · 12:43 a.m.", "fsol_iso": "2025-02-13T00:43:00", "vend": "Ybarra Reyes Armando", "dent": 0, "estatus": "Cancelada", "estado": "lenta", "dias_gestion": 120, "coment": "Se establecio el documento como [Cancelada] y ...", "cfecha": "Jun 13, 2025", "chora": "11:09AM"}, {"id": "625015", "doc": "OT-2025011124/CLICK", "cat": "Emisión", "aseg": "BANORTE", "ramo": "Automóviles Individuales", "cliente": "Sanchez Rodriguez Jorge Esaú", "detalle": "FORD / KTP XL SUPER DUTY S ...", "fpago": "Contado", "fsol": "17 feb 2025 · 5:35 p.m.", "fsol_iso": "2025-02-17T17:35:00", "vend": "Sanchez Rodriguez Jorge Esaú", "dent": 0, "estatus": "Cancelada", "estado": "lenta", "dias_gestion": 116, "coment": "Se establecio el documento como [Cancelada] y ...", "cfecha": "Jun 13, 2025", "chora": "11:09AM"}, {"id": "630495", "doc": "OT-2025015419/CLICK", "cat": "Emisión", "aseg": "QUALITAS", "ramo": "Camiones Individuales", "cliente": "Ideas Mobiliarium SA de CV", "detalle": "CAM / REMOLQUE / CASETA MO ...", "fpago": "Contado", "fsol": "6 mar 2025 · 8:55 p.m.", "fsol_iso": "2025-03-06T20:55:00", "vend": "Loyola Roa Edgard", "dent": 0, "estatus": "Cancelada", "estado": "lenta", "dias_gestion": 99, "coment": "Se establecio el documento como [Cancelada] y ...", "cfecha": "Jun 13, 2025", "chora": "11:09AM"}];
+
+const STORAGE_KEY = 'ordenes_gerencia65_data_v1';
+let ALL_DATA;
+try{
+  const stored = localStorage.getItem(STORAGE_KEY);
+  ALL_DATA = stored ? JSON.parse(stored) : BASELINE_DATA.slice();
+}catch(e){
+  ALL_DATA = BASELINE_DATA.slice();
+}
+function saveToStorage(){
+  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(ALL_DATA)); }
+  catch(e){ console.error('No se pudo guardar en localStorage', e); }
+}
+
+const MESES_LARGO = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+const HOY = new Date(2026,5,29); // 29 junio 2026 — fecha de corte del reporte
+
+function fmtHoy(){
+  return `${HOY.getDate()} de ${MESES_LARGO[HOY.getMonth()]} de ${HOY.getFullYear()}`;
+}
+
+function escapeHtml(s){
+  return (s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function groupCount(arr, fn){
+  const m = new Map();
+  arr.forEach(x=>{ const k = fn(x); m.set(k, (m.get(k)||0)+1); });
+  return [...m.entries()].sort((a,b)=>b[1]-a[1]);
+}
+
+// severidad para la pestaña Vigentes (basada en DEntrega)
+function severityVigente(dent){
+  if(dent >= 1)  return {label:'En plazo',  color:'var(--enplazo)', key:'enplazo'};
+  if(dent === 0) return {label:'Vence hoy', color:'var(--hoy)',      key:'hoy'};
+  const d = Math.abs(dent);
+  if(d <= 7)  return {label:'Atraso leve',   color:'var(--leve)',  key:'leve'};
+  if(d <= 15) return {label:'Atraso medio',  color:'var(--media)', key:'media'};
+  if(d <= 30) return {label:'Atraso alto',   color:'var(--alta)',  key:'alta'};
+  return       {label:'Atraso crítico', color:'var(--crit)', key:'critica'};
+}
+// severidad para Canceladas / No Renovadas (basada en días en gestión)
+function severityGestion(dg){
+  if(dg <= 7)  return {label:'Gestión rápida',     color:'var(--enplazo)', key:'rapida'};
+  if(dg <= 20) return {label:'Gestión normal',     color:'var(--hoy)',     key:'normal'};
+  return       {label:'Gestión prolongada', color:'var(--crit)',    key:'lenta'};
+}
+function statusMeta(d){
+  return d.estatus==='Vigente' ? severityVigente(d.dent) : severityGestion(d.dias_gestion);
+}
+
+// ===================== INFORME DE REGISTRO (MODAL) =====================
+const CHECK_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+
+function diasLineaFor(d){
+  const isVigente = d.estatus === 'Vigente';
+  const sv = statusMeta(d);
+  return isVigente
+    ? (d.dent < 0 ? `${Math.abs(d.dent)} días de atraso · ${sv.label}` : (d.dent===0 ? 'Vence hoy' : `${d.dent} días restantes`))
+    : `${d.dias_gestion} días en gestión · ${sv.label}`;
+}
+
+const SEVERITY_WORD = {critica:'crítico', alta:'alto', media:'medio', leve:'leve', hoy:'vence hoy', enplazo:'en plazo', lenta:'prolongada', normal:'normal', rapida:'rápida'};
+function diasCortoFor(d){
+  const sv = statusMeta(d);
+  const palabra = SEVERITY_WORD[sv.key] || sv.label.toLowerCase();
+  if(d.estatus === 'Vigente'){
+    if(d.dent < 0) return `${Math.abs(d.dent)} días de atraso (${palabra})`;
+    if(d.dent === 0) return 'Vence hoy';
+    return `${d.dent} días restantes`;
+  }
+  return `${d.dias_gestion} días en gestión (${palabra})`;
+}
+
+// Texto optimizado para WhatsApp (sin iconos, negritas con asteriscos)
+function buildReportText(d, index, total){
+  const numPrefix = total > 1 ? `${index+1}. ` : '';
+  const fechaCorta = (d.fsol||'').split(' · ')[0];
+  return [
+    `*${numPrefix}${d.doc}* — ${d.cat}, ${d.estatus}`,
+    `Cliente: ${d.cliente}`,
+    `${d.aseg} — ${d.ramo}`,
+    `Vendedor: ${d.vend}`,
+    `${d.fpago} · ${fechaCorta}`,
+    diasCortoFor(d),
+  ].join('\n');
+}
+
+function buildReportBlockHtml(d, index){
+  const rowsHtml = [
+    ['Documento', d.doc], ['Categoría', d.cat], ['Estatus', d.estatus], ['Días', diasLineaFor(d)],
+    ['Aseguradora', d.aseg], ['Ramo', d.ramo], ['Cliente', d.cliente], ['Vendedor', d.vend],
+    ['Forma de pago', d.fpago], ['Fecha de solicitud', d.fsol], ['Detalle', d.detalle],
+    ['Última actividad', `${d.cfecha} ${d.chora} — ${d.coment}`],
+  ].map(([label,value])=>`<div class="report-row"><div class="report-label">${escapeHtml(label)}</div><div class="report-value">${escapeHtml(value)}</div></div>`).join('');
+
+  return `<div class="report-block">
+      <div class="report-block-head">
+        <span class="report-block-title">${index+1}. ${escapeHtml(d.doc)} — ${escapeHtml(d.cliente)}</span>
+        <button class="report-remove" data-id="${d.id}" title="Quitar este registro del informe">Quitar ✕</button>
+      </div>
+      ${rowsHtml}
+    </div>`;
+}
+
+function getVerifiedRecords(){
+  return [...state.verified].map(id => ALL_DATA.find(d=>d.id===id)).filter(Boolean);
+}
+
+function unmarkRow(id){
+  state.verified.delete(id);
+  const circle = document.querySelector(`.verify-circle[data-id="${id}"]`);
+  if(circle){ circle.classList.remove('checked'); circle.closest('tr').classList.remove('verified-row'); }
+}
+
+function renderReportModal(){
+  const recs = getVerifiedRecords();
+  if(recs.length===0){ closeReportModal(); return; }
+
+  document.getElementById('modalTitle').textContent = recs.length===1
+    ? `Informe · ${recs[0].doc}`
+    : `Informe · ${recs.length} órdenes seleccionadas`;
+  document.getElementById('modalBody').innerHTML = recs.map((d,i)=>buildReportBlockHtml(d,i)).join('');
+
+  const header = '*Informe de Órdenes de Trabajo — Click Seguros Roma*';
+  const body = recs.map((d,i)=>buildReportText(d,i,recs.length)).join('\n\n―――――――――――――\n\n');
+  document.getElementById('modalOverlay').dataset.reportText = `${header}\n\n${body}`;
+  document.getElementById('modalOverlay').classList.add('show');
+
+  document.querySelectorAll('.report-remove').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      unmarkRow(btn.dataset.id);
+      renderReportModal();
+    });
+  });
+}
+
+function closeReportModal(){
+  document.getElementById('modalOverlay').classList.remove('show');
+}
+
+function copyReportText(){
+  const text = document.getElementById('modalOverlay').dataset.reportText || '';
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(()=> showToast('Informe copiado al portapapeles.'))
+      .catch(()=> showToast('No se pudo copiar automáticamente.', true));
+  } else {
+    showToast('No se pudo copiar automáticamente.', true);
+  }
+}
+
+// ===================== ESTADO GLOBAL =====================
+let state = { tab:'Vigente', cat:'', estado:'', aseg:'', ramo:'', vend:'', fpago:'', q:'', quick:'',
+              sortKey:'dent', sortDir:'asc', expanded:new Set(), verified:new Set() };
+
+function currentTabData(){
+  return ALL_DATA.filter(d=>d.estatus===state.tab);
+}
+
+// ===================== KPIs =====================
+function buildKPICards(tab, rows){
+  if(rows.length===0){
+    return [{label:'Sin órdenes', value:'—', sub:'No hay registros en esta pestaña', cls:'neutral', action:'total'}];
+  }
+  if(tab==='Vigente'){
+    const total = rows.length;
+    const vencidas = rows.filter(d=>d.dent<0);
+    const pctVenc = (vencidas.length/total*100).toFixed(0);
+    const avgAtraso = vencidas.length ? (vencidas.reduce((s,d)=>s+Math.abs(d.dent),0)/vencidas.length).toFixed(0) : '0';
+    const peor = rows.reduce((a,b)=> a.dent < b.dent ? a : b);
+    const porVencer = rows.filter(d=>d.dent>=0 && d.dent<=3).length;
+    return [
+      {label:'Órdenes en seguimiento', value:total, sub:`${rows.filter(d=>d.cat==='Emisión').length} emisión · ${rows.filter(d=>d.cat==='Renovación').length} renovación`, cls:'neutral', action:'total'},
+      {label:'Vencidas', value:`${vencidas.length} (${pctVenc}%)`, sub:'sobre la fecha de entrega comprometida', cls:'crit', action:'vencidas'},
+      {label:'Atraso promedio', value:`${avgAtraso} d`, sub:'entre las órdenes vencidas', cls:'warn', action:'vencidas'},
+      {label:'Caso más crítico', value:`${Math.abs(peor.dent)} d`, sub:`${peor.cliente} · ${peor.aseg}`, cls:'crit', action:'critico', doc:peor.doc},
+      {label:'Por vencer (≤3 días)', value:porVencer, sub:'requieren atención inmediata', cls:'ok', action:'porvencer'},
+    ];
+  }
+  // Cancelada / No Renovada
+  const total = rows.length;
+  const emis = rows.filter(d=>d.cat==='Emisión').length;
+  const renov = rows.filter(d=>d.cat==='Renovación').length;
+  const avgGestion = (rows.reduce((s,d)=>s+d.dias_gestion,0)/total).toFixed(0);
+  const peor = rows.reduce((a,b)=> a.dias_gestion > b.dias_gestion ? a : b);
+  const lentas = rows.filter(d=>d.dias_gestion>20).length;
+  const pctTotal = (total/ALL_DATA.length*100).toFixed(0);
+  const verbo = tab==='Cancelada' ? 'cancelada' : 'marcada como no renovada';
+  const tituloTotal = tab==='Cancelada' ? 'Total canceladas' : 'Total no renovadas';
+  return [
+    {label:tituloTotal, value:total, sub:`${emis} emisión · ${renov} renovación`, cls:'neutral', action:'total'},
+    {label:'% del total registrado', value:`${pctTotal}%`, sub:`sobre las ${ALL_DATA.length} órdenes del reporte`, cls:'warn', action:'total'},
+    {label:'Gestión promedio', value:`${avgGestion} d`, sub:`días desde la solicitud hasta quedar ${verbo}`, cls:'info', action:'total'},
+    {label:'Gestión más larga', value:`${peor.dias_gestion} d`, sub:`${peor.cliente} · ${peor.aseg}`, cls:'crit', action:'critico', doc:peor.doc},
+    {label:'Gestión prolongada (>20 d)', value:lentas, sub:'posible oportunidad de mejora en el proceso', cls:'crit', action:'gestionlenta'},
+  ];
+}
+
+function renderKPIs(){
+  const rows = currentTabData();
+  const cards = buildKPICards(state.tab, rows);
+  document.getElementById('kpiRow').innerHTML = cards.map(c=>`
+    <div class="kpi ${c.cls} kpi-clickable" data-action="${c.action}" data-doc="${escapeHtml(c.doc||'')}" title="Doble clic para ver estas órdenes en la tabla"><div class="bar"></div>
+      <div class="kpi-label">${c.label}</div>
+      <div class="kpi-value">${c.value}</div>
+      <div class="kpi-sub">${escapeHtml(c.sub)}</div>
+    </div>`).join('');
+
+  document.querySelectorAll('.kpi-clickable').forEach(el=>{
+    el.addEventListener('dblclick', ()=> applyQuickFilter(el.dataset.action, el.dataset.doc));
+  });
+}
+
+// ===================== RADAR =====================
+function renderRadar(){
+  const rows = currentTabData();
+  const isVigente = state.tab === 'Vigente';
+
+  document.getElementById('radarTitle').textContent = isVigente
+    ? 'Radar de antigüedad — todas las órdenes, de la más vencida a la más reciente'
+    : (state.tab==='Cancelada'
+        ? 'Radar de gestión — tiempo transcurrido antes de cancelar'
+        : 'Radar de gestión — tiempo transcurrido antes de marcar como no renovada');
+  document.getElementById('radarFootLeft').textContent  = isVigente ? '← más urgente' : '← gestión más larga';
+  document.getElementById('radarFootRight').textContent = isVigente ? 'en plazo →' : 'resolución rápida →';
+
+  const legendItems = isVigente ? [
+    ['critica','var(--crit)','Crítica (>30d)'],['alta','var(--alta)','Alta (16-30d)'],
+    ['media','var(--media)','Media (8-15d)'],['leve','var(--leve)','Leve (1-7d)'],
+    ['hoy','var(--hoy)','Hoy'],['enplazo','var(--enplazo)','En plazo'],
+  ] : [
+    ['lenta','var(--crit)','Prolongada (>20d)'],['normal','var(--hoy)','Normal (8-20d)'],['rapida','var(--enplazo)','Rápida (≤7d)'],
+  ];
+  document.getElementById('radarLegend').innerHTML = legendItems.map(([k,c,l])=>
+    `<span><i style="background:${c}"></i>${l}</span>`).join('');
+
+  if(rows.length===0){
+    document.getElementById('radarStrip').innerHTML = `<div class="radar-empty">No hay órdenes en esta pestaña.</div>`;
+    return;
+  }
+
+  const sorted = isVigente
+    ? [...rows].sort((a,b)=>a.dent-b.dent)
+    : [...rows].sort((a,b)=>b.dias_gestion-a.dias_gestion);
+
+  document.getElementById('radarStrip').innerHTML = sorted.map((d,i)=>{
+    const sv = statusMeta(d);
+    let h, dayLbl, extraLine;
+    if(isVigente){
+      h = Math.max(14, Math.min(54, 14 + Math.abs(d.dent)*0.4));
+      dayLbl = d.dent < 0 ? `-${Math.abs(d.dent)}` : (d.dent===0?'0':`+${d.dent}`);
+      extraLine = `${sv.label} · ${dayLbl} d`;
+    } else {
+      h = Math.max(14, Math.min(54, 14 + d.dias_gestion*0.35));
+      dayLbl = `${d.dias_gestion}`;
+      extraLine = `${sv.label} · ${d.dias_gestion} d en gestión`;
+    }
+    const tipAccent = (sv.key==='enplazo'||sv.key==='rapida') ? '#8FE3BD' : '#FFD37A';
+    return `<div class="tile" style="height:${h}px;background:${sv.color};animation-delay:${i*8}ms">
+        <div class="tip"><b>${escapeHtml(d.doc)}</b>${escapeHtml(d.cliente)}<br>${escapeHtml(d.aseg)} · ${escapeHtml(d.vend)}<br><b style="margin-top:4px;color:${tipAccent}">${extraLine}</b></div>
+      </div>`;
+  }).join('');
+}
+
+// ===================== RANKINGS =====================
+function renderRankVendedores(){
+  const rows = currentTabData();
+  const target = document.getElementById('rankVendedores');
+  if(rows.length===0){ target.innerHTML = `<div class="empty-note">No hay órdenes en esta pestaña.</div>`; return; }
+  const rk = groupCount(rows, d=>d.vend);
+  const max = rk[0][1];
+  target.innerHTML = rk.map(([name,count],i)=>{
+    const top = i<3 ? `top${i+1}` : '';
+    return `<div class="rank-row ${top}">
+        <div class="rank-pos">${i+1}</div>
+        <div>
+          <div class="rank-name vend-link" data-vend="${escapeHtml(name)}" title="Doble clic para filtrar la tabla por este vendedor">${escapeHtml(name)}</div>
+          <div class="rank-bar-wrap"><div class="rank-bar-fill" style="width:${count/max*100}%"></div></div>
+        </div>
+        <div class="rank-count">${count}</div>
+      </div>`;
+  }).join('');
+
+  document.querySelectorAll('#rankVendedores .vend-link').forEach(el=>{
+    el.addEventListener('dblclick', ()=>{
+      const v = el.dataset.vend;
+      state.vend = v; state.quick='';
+      document.getElementById('fVend').value = v;
+      renderTable();
+      document.querySelector('.table-card').scrollIntoView({behavior:'smooth', block:'start'});
+    });
+  });
+}
+
+function renderRankAseguradoras(){
+  const rows = currentTabData();
+  const target = document.getElementById('rankAseguradoras');
+  if(rows.length===0){ target.innerHTML = `<div class="empty-note">No hay órdenes en esta pestaña.</div>`; return; }
+  const rk = groupCount(rows, d=>d.aseg);
+  const max = rk[0][1];
+  target.innerHTML = rk.map(([name,count])=>`
+      <div class="aseg-row">
+        <div>
+          <div class="aseg-name aseg-link" data-aseg="${escapeHtml(name)}" title="Doble clic para filtrar la tabla por esta aseguradora">${escapeHtml(name)}</div>
+          <div class="aseg-bar-wrap"><div class="aseg-bar-fill" style="width:${count/max*100}%"></div></div>
+        </div>
+        <div class="rank-count">${count}</div>
+      </div>`).join('');
+
+  document.querySelectorAll('#rankAseguradoras .aseg-link').forEach(el=>{
+    el.addEventListener('dblclick', ()=>{
+      const a = el.dataset.aseg;
+      state.aseg = a; state.quick='';
+      document.getElementById('fAseg').value = a;
+      renderTable();
+      document.querySelector('.table-card').scrollIntoView({behavior:'smooth', block:'start'});
+    });
+  });
+}
+
+function renderRankRamos(){
+  const rows = currentTabData();
+  const target = document.getElementById('rankRamos');
+  if(rows.length===0){ target.innerHTML = `<div class="empty-note">No hay órdenes en esta pestaña.</div>`; return; }
+  const rk = groupCount(rows, d=>d.ramo);
+  const max = rk[0][1];
+  target.innerHTML = rk.map(([name,count])=>`
+      <div class="aseg-row">
+        <div>
+          <div class="aseg-name ramo-link" data-ramo="${escapeHtml(name)}" title="Doble clic para filtrar la tabla por este ramo">${escapeHtml(name)}</div>
+          <div class="aseg-bar-wrap"><div class="aseg-bar-fill" style="width:${count/max*100}%;background:#7A4FB5"></div></div>
+        </div>
+        <div class="rank-count">${count}</div>
+      </div>`).join('');
+
+  document.querySelectorAll('#rankRamos .ramo-link').forEach(el=>{
+    el.addEventListener('dblclick', ()=>{
+      const r = el.dataset.ramo;
+      state.ramo = r; state.quick='';
+      document.getElementById('fRamo').value = r;
+      renderTable();
+      document.querySelector('.table-card').scrollIntoView({behavior:'smooth', block:'start'});
+    });
+  });
+}
+
+// ===================== TARJETAS DE CATEGORÍA =====================
+const CAT_ICONS = {
+  filePlus: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><line x1="12" y1="10" x2="12" y2="16"/><line x1="9" y1="13" x2="15" y2="13"/></svg>',
+  refresh: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11A8 8 0 1 0 18.5 16"/><polyline points="20 5 20 11 14 11"/></svg>',
+};
+const CAT_COLORS = {'Emisión':'#7A4FB5','Renovación':'#3A6EA5'};
+
+function renderCatTiles(){
+  const rows = currentTabData();
+  const target = document.getElementById('catTiles');
+  if(rows.length===0){ target.innerHTML = `<div class="empty-note">No hay órdenes en esta pestaña.</div>`; return; }
+  const groups = groupCount(rows, d=>d.cat);
+  target.innerHTML = groups.map(([name,count])=>{
+    const icon = name==='Emisión' ? CAT_ICONS.filePlus : CAT_ICONS.refresh;
+    const c = CAT_COLORS[name] || '#6B7280';
+    return `<div class="cat-tile" data-cat="${escapeHtml(name)}" title="Doble clic para filtrar por ${escapeHtml(name)}">
+        <span class="cat-tile-icon" style="color:${c}">${icon}</span>
+        <div class="tile-value">${count}</div>
+        <div class="tile-label">${escapeHtml(name)}</div>
+      </div>`;
+  }).join('');
+
+  document.querySelectorAll('.cat-tile').forEach(el=>{
+    el.addEventListener('dblclick', ()=>{
+      const v = el.dataset.cat;
+      state.cat = v; state.quick='';
+      document.getElementById('fCat').value = v;
+      renderTable();
+      document.querySelector('.table-card').scrollIntoView({behavior:'smooth', block:'start'});
+    });
+  });
+}
+
+// ===================== FILTROS DE TABLA =====================
+function resetFilterInputs(){
+  ['fCat','fEstado','fAseg','fRamo','fVend','fFpago'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('fQuery').value='';
+}
+
+function populateFilterOptions(){
+  const rows = currentTabData();
+  const cats = [...new Set(rows.map(d=>d.cat))].sort();
+  const asegs = [...new Set(rows.map(d=>d.aseg))].sort();
+  const ramos = [...new Set(rows.map(d=>d.ramo))].sort();
+  const vends = [...new Set(rows.map(d=>d.vend))].sort();
+  const fpagos = [...new Set(rows.map(d=>d.fpago))].sort();
+  const estados = state.tab==='Vigente'
+    ? [['vencida','Vencida'],['hoy','Vence hoy'],['enplazo','En plazo']]
+    : [['rapida','Gestión rápida (≤7d)'],['normal','Gestión normal (8-20d)'],['lenta','Gestión prolongada (>20d)']];
+
+  const fCat = document.getElementById('fCat');
+  fCat.innerHTML = '<option value="">Categoría: todas</option>';
+  cats.forEach(c=> fCat.insertAdjacentHTML('beforeend', `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`));
+
+  const fAseg = document.getElementById('fAseg');
+  fAseg.innerHTML = '<option value="">Aseguradora: todas</option>';
+  asegs.forEach(a=> fAseg.insertAdjacentHTML('beforeend', `<option value="${escapeHtml(a)}">${escapeHtml(a)}</option>`));
+
+  const fRamo = document.getElementById('fRamo');
+  fRamo.innerHTML = '<option value="">Ramo: todos</option>';
+  ramos.forEach(r=> fRamo.insertAdjacentHTML('beforeend', `<option value="${escapeHtml(r)}">${escapeHtml(r)}</option>`));
+
+  const fVend = document.getElementById('fVend');
+  fVend.innerHTML = '<option value="">Vendedor: todos</option>';
+  vends.forEach(v=> fVend.insertAdjacentHTML('beforeend', `<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`));
+
+  const fFpago = document.getElementById('fFpago');
+  fFpago.innerHTML = '<option value="">Pago: todos</option>';
+  fpagos.forEach(p=> fFpago.insertAdjacentHTML('beforeend', `<option value="${escapeHtml(p)}">${escapeHtml(p)}</option>`));
+
+  const fEstado = document.getElementById('fEstado');
+  fEstado.innerHTML = '<option value="">Estado: todos</option>';
+  estados.forEach(([k,l])=> fEstado.insertAdjacentHTML('beforeend', `<option value="${k}">${l}</option>`));
+}
+
+function getFiltered(){
+  let rows = currentTabData().filter(d=>{
+    if(state.cat && d.cat!==state.cat) return false;
+    if(state.estado && d.estado!==state.estado) return false;
+    if(state.aseg && d.aseg!==state.aseg) return false;
+    if(state.ramo && d.ramo!==state.ramo) return false;
+    if(state.vend && d.vend!==state.vend) return false;
+    if(state.fpago && d.fpago!==state.fpago) return false;
+    if(state.q){
+      const q = state.q.toLowerCase();
+      if(!d.cliente.toLowerCase().includes(q) && !d.doc.toLowerCase().includes(q)) return false;
+    }
+    if(state.quick==='porvencer' && !(d.dent>=0 && d.dent<=3)) return false;
+    if(state.quick==='gestionlenta' && !(d.dias_gestion>20)) return false;
+    return true;
+  });
+  rows.sort((a,b)=>{
+    let va=a[state.sortKey], vb=b[state.sortKey];
+    if(typeof va==='string') { va=va.toLowerCase(); vb=vb.toLowerCase(); }
+    let cmp = va<vb ? -1 : va>vb ? 1 : 0;
+    return state.sortDir==='asc' ? cmp : -cmp;
+  });
+  return rows;
+}
+
+function hasActiveFilters(){
+  return !!(state.cat || state.estado || state.aseg || state.ramo || state.vend || state.fpago || state.q || state.quick);
+}
+
+function renderTable(){
+  const rows = getFiltered();
+  const tabTotal = currentTabData().length;
+  document.getElementById('resultCount').textContent = `${rows.length} de ${tabTotal} órdenes`;
+  document.getElementById('btnClear').classList.toggle('active', hasActiveFilters());
+
+  document.querySelectorAll('thead th[data-key]').forEach(th=>{
+    th.classList.toggle('sorted', th.dataset.key===state.sortKey);
+    th.classList.toggle('asc', th.dataset.key===state.sortKey && state.sortDir==='asc');
+  });
+
+  const isVigente = state.tab==='Vigente';
+
+  document.getElementById('tbody').innerHTML = rows.map(d=>{
+    const sv = statusMeta(d);
+    const dayLbl = isVigente
+      ? (d.dent < 0 ? `${Math.abs(d.dent)} d atraso` : (d.dent===0?'Vence hoy':`${d.dent} d restantes`))
+      : `${d.dias_gestion} d gestión`;
+    const catCls = d.cat==='Emisión' ? 'emision' : 'renovacion';
+    const isOpen = state.expanded.has(d.id);
+    const isVerified = state.verified.has(d.id);
+    const detailRow = isOpen ? `<tr><td colspan="9" class="row-detail">
+          <b>Detalle:</b> ${escapeHtml(d.detalle)}<br>
+          <b>Última actividad (${escapeHtml(d.cfecha)} ${escapeHtml(d.chora)}):</b> ${escapeHtml(d.coment)}
+        </td></tr>` : '';
+    return `<tr class="${isVerified?'verified-row':''}">
+        <td><span class="verify-circle ${isVerified?'checked':''}" data-id="${d.id}" title="Marcar como verificado y ver informe">${CHECK_ICON}</span></td>
+        <td><span class="status-pill" style="background:${sv.color}22;color:${sv.color}"><i style="background:${sv.color}"></i>${dayLbl}</span></td>
+        <td><span class="doc-code">${escapeHtml(d.doc)}</span><br><span class="cat-tag ${catCls}">${escapeHtml(d.cat)}</span></td>
+        <td><strong class="cell-link aseg-cell" data-aseg="${escapeHtml(d.aseg)}" title="Doble clic para filtrar por esta aseguradora">${escapeHtml(d.aseg)}</strong><span class="ramo-name cell-link ramo-cell" data-ramo="${escapeHtml(d.ramo)}" title="Doble clic para filtrar por este ramo">${escapeHtml(d.ramo)}</span></td>
+        <td class="cliente-name"><span class="cell-link cliente-cell" data-cliente="${escapeHtml(d.cliente)}" title="Doble clic para buscar este cliente">${escapeHtml(d.cliente)}</span></td>
+        <td><span class="cell-link vend-cell" data-vend="${escapeHtml(d.vend)}" title="Doble clic para filtrar por este vendedor">${escapeHtml(d.vend)}</span></td>
+        <td>${escapeHtml(d.fpago)}</td>
+        <td>${escapeHtml(d.fsol)}</td>
+        <td><button class="expand-btn" data-id="${d.id}">${isOpen?'−':'+'}</button></td>
+      </tr>${detailRow}`;
+  }).join('') || `<tr><td colspan="9" style="text-align:center;color:var(--muted-2);padding:30px;">Sin resultados para estos filtros.</td></tr>`;
+
+  document.querySelectorAll('.verify-circle').forEach(circle=>{
+    circle.addEventListener('click', ()=>{
+      const id = circle.dataset.id;
+      if(state.verified.has(id)){
+        unmarkRow(id);
+        if(document.getElementById('modalOverlay').classList.contains('show')) renderReportModal();
+      } else {
+        state.verified.add(id);
+        circle.classList.add('checked');
+        circle.closest('tr').classList.add('verified-row');
+        renderReportModal();
+      }
+    });
+  });
+
+  document.querySelectorAll('.expand-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const id = btn.dataset.id;
+      state.expanded.has(id) ? state.expanded.delete(id) : state.expanded.add(id);
+      renderTable();
+    });
+  });
+
+  document.querySelectorAll('.aseg-cell').forEach(el=>{
+    el.addEventListener('dblclick', ()=>{
+      state.aseg = el.dataset.aseg; state.quick='';
+      document.getElementById('fAseg').value = state.aseg;
+      renderTable();
+    });
+  });
+  document.querySelectorAll('.ramo-cell').forEach(el=>{
+    el.addEventListener('dblclick', ()=>{
+      state.ramo = el.dataset.ramo; state.quick='';
+      document.getElementById('fRamo').value = state.ramo;
+      renderTable();
+    });
+  });
+  document.querySelectorAll('.vend-cell').forEach(el=>{
+    el.addEventListener('dblclick', ()=>{
+      state.vend = el.dataset.vend; state.quick='';
+      document.getElementById('fVend').value = state.vend;
+      renderTable();
+    });
+  });
+  document.querySelectorAll('.cliente-cell').forEach(el=>{
+    el.addEventListener('dblclick', ()=>{
+      state.q = el.dataset.cliente; state.quick='';
+      document.getElementById('fQuery').value = state.q;
+      renderTable();
+    });
+  });
+}
+
+function applyQuickFilter(action, doc){
+  state.cat=state.estado=state.aseg=state.ramo=state.vend=state.fpago=state.q=''; state.quick='';
+  resetFilterInputs();
+
+  if(action==='vencidas'){
+    state.estado='vencida';
+    document.getElementById('fEstado').value='vencida';
+  } else if(action==='critico' && doc){
+    state.q=doc;
+    document.getElementById('fQuery').value=doc;
+  } else if(action==='porvencer'){
+    state.quick='porvencer';
+  } else if(action==='gestionlenta'){
+    state.quick='gestionlenta';
+  }
+  // 'total' deja todos los filtros limpios
+
+  renderTable();
+  document.querySelector('.table-card').scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+// ===================== ENCABEZADOS DINÁMICOS POR PESTAÑA =====================
+function updateHeaderForTab(){
+  const rows = currentTabData();
+  const thDays = document.getElementById('thDays');
+  const subtitle = document.getElementById('subtitleText');
+  const tableTitle = document.getElementById('tableTitle');
+
+  if(state.tab==='Vigente'){
+    thDays.textContent = 'Días'; thDays.dataset.key = 'dent';
+    subtitle.textContent = 'Seguimiento de solicitudes de Emisión y Renovación pendientes de completar';
+    tableTitle.textContent = 'Detalle de órdenes pendientes';
+    document.getElementById('metaTotal').textContent = `${rows.length} órdenes en seguimiento`;
+  } else if(state.tab==='Cancelada'){
+    thDays.textContent = 'Días gestión'; thDays.dataset.key = 'dias_gestion';
+    subtitle.textContent = 'Órdenes que terminaron canceladas, y cuánto tiempo estuvieron en gestión antes';
+    tableTitle.textContent = 'Detalle de órdenes canceladas';
+    document.getElementById('metaTotal').textContent = `${rows.length} órdenes canceladas`;
+  } else {
+    thDays.textContent = 'Días gestión'; thDays.dataset.key = 'dias_gestion';
+    subtitle.textContent = 'Órdenes de renovación marcadas como no renovadas';
+    tableTitle.textContent = 'Detalle de órdenes no renovadas';
+    document.getElementById('metaTotal').textContent = `${rows.length} órdenes no renovadas`;
+  }
+}
+
+// ===================== RENDER GENERAL =====================
+function renderAll(){
+  updateHeaderForTab();
+  const rows = currentTabData();
+
+  renderKPIs();
+  renderRadar();
+  renderRankVendedores();
+  renderRankAseguradoras();
+  renderRankRamos();
+  renderCatTiles();
+
+  populateFilterOptions();
+  renderTable();
+}
+
+function switchTab(tab){
+  if(state.tab===tab) return;
+  state.tab = tab;
+  state.cat=state.estado=state.aseg=state.ramo=state.vend=state.fpago=state.q=''; state.quick='';
+  state.expanded = new Set();
+  state.sortKey = tab==='Vigente' ? 'dent' : 'dias_gestion';
+  state.sortDir = tab==='Vigente' ? 'asc' : 'desc';
+
+  document.querySelectorAll('.tab-btn').forEach(b=> b.classList.toggle('active', b.dataset.tab===tab));
+  renderAll();
+}
+
+// ===================== IMPORTAR / ELIMINAR ARCHIVO DE REGISTROS =====================
+const MESES = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+const MESES_EN = {Jan:0,Feb:1,Mar:2,Apr:3,May:4,Jun:5,Jul:6,Aug:7,Sep:8,Oct:9,Nov:10,Dec:11};
+
+function readFileAsLatin1(file){
+  return new Promise((resolve, reject)=>{
+    const reader = new FileReader();
+    reader.onload = ()=>{
+      try{ resolve(new TextDecoder('iso-8859-1').decode(reader.result)); }
+      catch(e){ reject(e); }
+    };
+    reader.onerror = ()=> reject(reader.error);
+    reader.readAsArrayBuffer(file);
+  });
+}
+
+function parseCSVLine(line){
+  const fields = []; let cur = ''; let inQuotes = false;
+  for(let i=0;i<line.length;i++){
+    const c = line[i];
+    if(inQuotes){
+      if(c === '"'){
+        if(line[i+1] === '"'){ cur += '"'; i++; }
+        else { inQuotes = false; }
+      } else { cur += c; }
+    } else {
+      if(c === '"'){ inQuotes = true; }
+      else if(c === ','){ fields.push(cur); cur = ''; }
+      else { cur += c; }
+    }
+  }
+  fields.push(cur);
+  return fields;
+}
+
+function fixRow(rawRow){
+  const n = rawRow.length;
+  if(n >= 18){
+    const surplus = n - 18;
+    if(surplus > 0){
+      const mergedDetalle = rawRow.slice(6, 7+surplus).join(',');
+      return [...rawRow.slice(0,6), mergedDetalle, ...rawRow.slice(7+surplus, 18)];
+    }
+    return rawRow.slice(0,17);
+  }
+  const padded = rawRow.slice();
+  while(padded.length < 17) padded.push('');
+  return padded;
+}
+
+function cleanWs(s){ return (s||'').replace(/\s+/g,' ').trim(); }
+
+function titleCaseName(s){
+  s = cleanWs(s);
+  if(!s) return s;
+  const keepUpper = new Set(['SA','SAS','SAPI','SC','CV']);
+  const lowerWords = new Set(['DE','Y']);
+  return s.split(' ').map(w=>{
+    const wu = w.toUpperCase().replace(/\.$/,'');
+    if(keepUpper.has(wu)) return w.toUpperCase();
+    if(lowerWords.has(wu)) return w.toLowerCase();
+    return w.charAt(0).toUpperCase() + w.slice(1).toLowerCase();
+  }).join(' ');
+}
+
+function parseFSolicitud(s){
+  s = (s||'').trim();
+  const parts = s.split(' ');
+  const [dd,mm,yyyy] = parts[0].split('/').map(Number);
+  const dt = new Date(yyyy, mm-1, dd);
+  const hasTime = parts.length >= 3;
+  if(hasTime){
+    const [h0,mi,se] = parts[1].split(':').map(Number);
+    let h = h0;
+    const ampm = parts.slice(2).join(' ').replace(/\./g,'').trim().toLowerCase();
+    if(ampm.includes('p') && h !== 12) h += 12;
+    if(ampm.includes('a') && h === 12) h = 0;
+    dt.setHours(h, mi, se||0, 0);
+  }
+  return {dt, hasTime};
+}
+
+function parseCFecha(s){
+  s = (s||'').trim();
+  const m = s.match(/^([A-Za-z]{3})\w*\s+(\d{1,2}),?\s*(\d{4})$/);
+  if(!m) return new Date(NaN);
+  const mon = MESES_EN[m[1]];
+  return new Date(parseInt(m[3],10), mon, parseInt(m[2],10));
+}
+
+function fmtFechaJS(dt){
+  return `${dt.getDate()} ${MESES[dt.getMonth()]} ${dt.getFullYear()}`;
+}
+function fmtHoraJS(dt){
+  let h = dt.getHours();
+  const suf = h < 12 ? 'a.m.' : 'p.m.';
+  let h12 = h % 12; if(h12===0) h12 = 12;
+  return `${h12}:${String(dt.getMinutes()).padStart(2,'0')} ${suf}`;
+}
+function toLocalISO(dt){
+  const pad = n => String(n).padStart(2,'0');
+  return `${dt.getFullYear()}-${pad(dt.getMonth()+1)}-${pad(dt.getDate())}T${pad(dt.getHours())}:${pad(dt.getMinutes())}:${pad(dt.getSeconds())}`;
+}
+
+function buildRecord(fixedRow){
+  const concepto = fixedRow[4] || '';
+  const parts = concepto.split(' / ').map(p=>p.trim());
+  const aseg = parts[0] || ''; const ramo = parts[1] || ''; const cliente = parts.slice(2).join(' / ');
+  const estatus = (fixedRow[5]||'').trim();
+  const fsolRaw = (fixedRow[8]||'').trim();
+  const {dt: dtSol, hasTime} = parseFSolicitud(fsolRaw);
+  const dent = parseInt(fixedRow[12], 10) || 0;
+  const cfechaRaw = (fixedRow[14]||'').trim();
+  const choraRaw = (fixedRow[15]||'').trim();
+  const dtC = parseCFecha(cfechaRaw);
+  const dateOnly = d => new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  let diasGestion = isNaN(dtC.getTime()) ? 0 : Math.round((dateOnly(dtC) - dateOnly(dtSol)) / 86400000);
+  if(diasGestion < 0) diasGestion = 0;
+
+  let estado;
+  if(estatus === 'Vigente'){
+    estado = dent < 0 ? 'vencida' : (dent === 0 ? 'hoy' : 'enplazo');
+  } else {
+    estado = diasGestion <= 7 ? 'rapida' : (diasGestion <= 20 ? 'normal' : 'lenta');
+  }
+
+  return {
+    id: (fixedRow[1]||'').trim(),
+    doc: (fixedRow[3]||'').trim(),
+    cat: (fixedRow[2]||'').trim(),
+    aseg, ramo,
+    cliente: titleCaseName(cliente),
+    detalle: cleanWs(fixedRow[6]),
+    fpago: (fixedRow[7]||'').trim(),
+    fsol: fmtFechaJS(dtSol) + (hasTime ? ' · ' + fmtHoraJS(dtSol) : ''),
+    fsol_iso: toLocalISO(dtSol),
+    vend: titleCaseName(fixedRow[11]),
+    dent,
+    estatus,
+    estado,
+    dias_gestion: diasGestion,
+    coment: cleanWs(fixedRow[13]),
+    cfecha: cfechaRaw,
+    chora: choraRaw,
+  };
+}
+
+function mergeRecords(newRecords){
+  const map = new Map(ALL_DATA.map(d=>[d.id, d]));
+  let added=0, updated=0;
+  newRecords.forEach(r=>{
+    if(!r.id) return;
+    if(map.has(r.id)) updated++; else added++;
+    map.set(r.id, r);
+  });
+  ALL_DATA = [...map.values()];
+  saveToStorage();
+  return {added, updated};
+}
+
+function refreshTabCounts(){
+  const v = ALL_DATA.filter(d=>d.estatus==='Vigente').length;
+  const c = ALL_DATA.filter(d=>d.estatus==='Cancelada').length;
+  const nr = ALL_DATA.filter(d=>d.estatus==='No Renovada').length;
+  document.getElementById('cntVigente').textContent = v;
+  document.getElementById('cntCancelada').textContent = c;
+  document.getElementById('cntNoRenovada').textContent = nr;
+  const foot = document.getElementById('footCounts');
+  if(foot) foot.textContent = `${ALL_DATA.length} órdenes registradas (${v} vigentes, ${c} canceladas, ${nr} no renovadas)`;
+}
+
+function showToast(msg, isError){
+  let t = document.getElementById('toast');
+  if(!t){
+    t = document.createElement('div');
+    t.id = 'toast'; t.className = 'toast';
+    document.body.appendChild(t);
+  }
+  t.textContent = msg;
+  t.classList.toggle('toast-error', !!isError);
+  t.classList.add('show');
+  clearTimeout(window.__toastTimer);
+  window.__toastTimer = setTimeout(()=> t.classList.remove('show'), 5000);
+}
+
+async function handleFilesSelected(files){
+  if(!files || !files.length) return;
+  let totalAdded=0, totalUpdated=0; const failed=[];
+  for(const file of files){
+    try{
+      const text = await readFileAsLatin1(file);
+      const lines = text.split(/\r\n|\n/).filter(l=>l.trim().length>0);
+      if(lines.length < 2) continue;
+      const records = [];
+      lines.slice(1).forEach(line=>{
+        const raw = parseCSVLine(line);
+        if(raw.every(f=>f==='')) return;
+        const fixed = fixRow(raw);
+        const rec = buildRecord(fixed);
+        if(rec.id) records.push(rec);
+      });
+      const res = mergeRecords(records);
+      totalAdded += res.added; totalUpdated += res.updated;
+    }catch(err){ failed.push(file.name); }
+  }
+  refreshTabCounts();
+  renderAll();
+  let msg = `Se agregaron ${totalAdded} órdenes nuevas y se actualizaron ${totalUpdated} existentes.`;
+  if(failed.length) msg += ` No se pudo leer: ${failed.join(', ')}.`;
+  showToast(msg, failed.length>0 && totalAdded===0 && totalUpdated===0);
+}
+
+function handleClearRecords(){
+  if(!confirm('¿Eliminar todos los registros cargados en este dashboard? Esta acción no se puede deshacer desde aquí; necesitarás volver a subir el archivo de órdenes.')) return;
+  ALL_DATA = [];
+  saveToStorage();
+  refreshTabCounts();
+  renderAll();
+  showToast('Se eliminaron todos los registros.');
+}
+
+function wireEvents(){
+  document.querySelectorAll('.tab-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=> switchTab(btn.dataset.tab));
+  });
+
+  document.getElementById('btnAddFile').addEventListener('click', ()=> document.getElementById('fileInput').click());
+  document.getElementById('fileInput').addEventListener('change', (e)=>{
+    handleFilesSelected(e.target.files);
+    e.target.value = '';
+  });
+  document.getElementById('btnClearData').addEventListener('click', handleClearRecords);
+
+  document.getElementById('modalX').addEventListener('click', closeReportModal);
+  document.getElementById('modalClose').addEventListener('click', closeReportModal);
+  document.getElementById('modalCopy').addEventListener('click', copyReportText);
+  document.getElementById('modalOverlay').addEventListener('click', (e)=>{
+    if(e.target.id === 'modalOverlay') closeReportModal();
+  });
+  document.addEventListener('keydown', (e)=>{
+    if(e.key === 'Escape') closeReportModal();
+  });
+
+  ['fCat','fEstado','fAseg','fRamo','fVend','fFpago'].forEach(id=>{
+    document.getElementById(id).addEventListener('change', e=>{
+      const map = {fCat:'cat',fEstado:'estado',fAseg:'aseg',fRamo:'ramo',fVend:'vend',fFpago:'fpago'};
+      state[map[id]] = e.target.value;
+      state.quick='';
+      renderTable();
+    });
+  });
+  document.getElementById('fQuery').addEventListener('input', e=>{
+    state.q = e.target.value; state.quick=''; renderTable();
+  });
+  document.getElementById('btnClear').addEventListener('click', ()=>{
+    state.cat=state.estado=state.aseg=state.ramo=state.vend=state.fpago=state.q=''; state.quick='';
+    resetFilterInputs();
+    renderTable();
+  });
+  document.querySelectorAll('thead th[data-key]').forEach(th=>{
+    th.addEventListener('click', ()=>{
+      const key = th.dataset.key;
+      if(state.sortKey===key){ state.sortDir = state.sortDir==='asc'?'desc':'asc'; }
+      else { state.sortKey=key; state.sortDir='asc'; }
+      renderTable();
+    });
+  });
+}
+
+// ===================== INIT =====================
+function init(){
+  document.getElementById('metaFecha').textContent = fmtHoy();
+  document.getElementById('footFecha').textContent = fmtHoy();
+
+  refreshTabCounts();
+
+  document.querySelector('.tab-btn[data-tab="Vigente"]').classList.add('active');
+
+  wireEvents();
+  renderAll();
+}
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
